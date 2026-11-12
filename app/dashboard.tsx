@@ -6,8 +6,10 @@ import {
   AlertCircle,
   ArrowDownToLine,
   ArrowRight,
+  BatteryCharging,
   Boxes,
   Cable,
+  Camera,
   Check,
   CheckCircle2,
   ChevronDown,
@@ -22,16 +24,20 @@ import {
   Hash,
   Layers,
   LayoutDashboard,
+  Laptop,
   MapPin,
   Menu,
+  Monitor,
   Network,
   PanelTop,
   Pencil,
   Phone,
   Plus,
   Printer,
+  Router,
   Search,
   Server,
+  Shield,
   ShieldCheck,
   Tag,
   Trash2,
@@ -44,11 +50,13 @@ import {
 } from 'lucide-react';
 import {
   EQUIPMENT_LABELS,
+  EQUIPMENT_STATES,
   KIND_LABELS,
   SITES,
   TEMPLATES,
   VERIFICATION_LABELS,
   type ChangeItem,
+  type EquipmentState,
   type Kind,
   type RecordItem,
   type Site,
@@ -69,6 +77,13 @@ type SiteFilter = Site | 'Todas las sedes';
 type Modal = { mode: 'choose' } | { mode: 'form'; template: Template; record?: RecordItem } | null;
 const iconMap: Record<string, LucideIcon> = {
   Network,
+  Monitor,
+  Laptop,
+  Router,
+  Shield,
+  Camera,
+  BatteryCharging,
+  HardDrive,
   Printer,
   Wifi,
   Phone,
@@ -100,11 +115,27 @@ const inventoryKinds: Kind[] = [
   'puerto',
   'vlan',
   'nodo',
+  'cable',
   'rack',
   'panel',
   'troncal',
   'poe',
 ];
+const quickEquipment = new Set(['switch', 'computadora', 'laptop', 'punto_acceso', 'servidor']);
+const equipmentCode: Record<string, string> = {
+  switch: 'SW',
+  computadora: 'PC',
+  laptop: 'LT',
+  impresora: 'PR',
+  punto_acceso: 'AP',
+  telefono_ip: 'IP',
+  servidor: 'SV',
+  router: 'RT',
+  firewall: 'FW',
+  camara_ip: 'CAM',
+  ups: 'UPS',
+  nas: 'NAS',
+};
 const day = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
 const shortDay = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' });
 function parseDate(value: string) {
@@ -131,6 +162,10 @@ function kindTitle(record: RecordItem) {
     return EQUIPMENT_LABELS[record.payload.tipo as keyof typeof EQUIPMENT_LABELS] ?? 'Equipo';
   return KIND_LABELS[record.kind];
 }
+function equipmentUsage(record: RecordItem): EquipmentState {
+  const value = record.payload.estadoUso as EquipmentState;
+  return EQUIPMENT_STATES.includes(value) ? value : 'Por confirmar';
+}
 function formTitle(template: Template) {
   if (template.id === 'ip') return 'dirección IP';
   if (template.id === 'telefono_ip') return 'teléfono IP';
@@ -153,6 +188,13 @@ function summary(record: RecordItem, all: RecordItem[]) {
       return [p.vlanId, p.subred].filter(Boolean).join(' · ');
     case 'nodo':
       return [p.etiqueta, p.area].filter(Boolean).join(' · ');
+    case 'cable':
+      return [
+        p.codigo,
+        p.extremoA && p.extremoB ? `${p.extremoA} → ${p.extremoB}` : p.extremoA || p.extremoB,
+      ]
+        .filter(Boolean)
+        .join(' · ');
     case 'rack':
       return [p.codigo, p.sala].filter(Boolean).join(' · ');
     case 'panel':
@@ -178,6 +220,15 @@ function Status({ value }: { value: Verification }) {
     <span className={`status status-${value}`}>
       <I size={13} />
       {VERIFICATION_LABELS[value]}
+    </span>
+  );
+}
+function UsageStatus({ value }: { value: EquipmentState }) {
+  const style = value.toLowerCase().replaceAll(' ', '-');
+  return (
+    <span className={`usage-status usage-status-${style}`}>
+      <i aria-hidden="true" />
+      {value}
     </span>
   );
 }
@@ -215,6 +266,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const [search, setSearch] = useState('');
   const [kindFilter, setKindFilter] = useState<Kind | 'todos'>('todos');
   const [verificationFilter, setVerificationFilter] = useState<Verification | 'todos'>('todos');
+  const [usageFilter, setUsageFilter] = useState<EquipmentState | 'todos'>('todos');
   const [modal, setModal] = useState<Modal>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
@@ -258,6 +310,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     [changes, site],
   );
   const equipment = scoped.filter((r) => r.kind === 'equipo');
+  const usageCounts = Object.fromEntries(
+    EQUIPMENT_STATES.map((state) => [
+      state,
+      equipment.filter((record) => equipmentUsage(record) === state).length,
+    ]),
+  ) as Record<EquipmentState, number>;
   const pending = scoped.filter((r) => r.kind === 'pendiente' && r.verification !== 'verificado');
   const tests = scoped.filter((r) => r.kind === 'prueba');
   const crossSiteLinks = records
@@ -290,18 +348,23 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         .filter((r) => verificationFilter === 'todos' || r.verification === verificationFilter)
         .filter(
           (r) =>
+            usageFilter === 'todos' || (r.kind === 'equipo' && equipmentUsage(r) === usageFilter),
+        )
+        .filter(
+          (r) =>
             !search ||
             [r.name, r.site, r.location, kindTitle(r), ...Object.values(r.payload)]
               .join(' ')
               .toLowerCase()
               .includes(search.toLowerCase()),
         ),
-    [scoped, kindFilter, verificationFilter, search],
+    [scoped, kindFilter, verificationFilter, usageFilter, search],
   );
   const automaticIssues = useMemo(() => {
     const issues: { title: string; description: string; site: Site }[] = [];
     const ips = new Map<string, RecordItem[]>();
     const ports = new Map<string, RecordItem[]>();
+    const cableLabels = new Map<string, RecordItem[]>();
     for (const r of scoped) {
       if (r.kind === 'ip' && r.payload.direccion) {
         const key = `${r.site}:${r.payload.direccion.toLowerCase()}`;
@@ -310,6 +373,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       if (r.kind === 'puerto' && r.payload.switch && r.payload.numero) {
         const key = `${r.payload.switch}:${r.payload.numero.toLowerCase()}`;
         ports.set(key, [...(ports.get(key) ?? []), r]);
+      }
+      if (r.kind === 'cable' && r.payload.codigo) {
+        const key = `${r.site}:${r.payload.codigo.toLowerCase()}`;
+        cableLabels.set(key, [...(cableLabels.get(key) ?? []), r]);
       }
       const template = templateFor(r);
       for (const field of template?.fields ?? []) {
@@ -338,6 +405,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         issues.push({
           title: 'Puerto duplicado',
           description: `${group[0].payload.numero} aparece en ${group.map((r) => r.name).join(', ')}.`,
+          site: group[0].site,
+        });
+    for (const group of cableLabels.values())
+      if (group.length > 1)
+        issues.push({
+          title: 'Etiqueta de cable duplicada',
+          description: `${group[0].payload.codigo} aparece en ${group.map((r) => r.name).join(', ')}.`,
           site: group[0].site,
         });
     return issues;
@@ -607,6 +681,29 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       color="purple"
                     />
                   </div>
+                  <div className="usage-overview card">
+                    <div>
+                      <span className="section-kicker">ESTADO DE USO</span>
+                      <h3>Equipos activos, inactivos y sin uso</h3>
+                    </div>
+                    <div className="usage-overview-grid">
+                      {EQUIPMENT_STATES.map((state) => (
+                        <button
+                          key={state}
+                          onClick={() => {
+                            setKindFilter('equipo');
+                            setUsageFilter(state);
+                            setVerificationFilter('todos');
+                            setSearch('');
+                            navigate('inventario');
+                          }}
+                        >
+                          <UsageStatus value={state} />
+                          <strong>{usageCounts[state]}</strong>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
                   <div className="dashboard-grid">
                     <div className="card progress-card">
                       <div className="card-title-row">
@@ -737,7 +834,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         </button>
                       </div>
                       <div className="quick-templates">
-                        {TEMPLATES.filter((t) => t.kind === 'equipo').map((t) => {
+                        {TEMPLATES.filter((t) => quickEquipment.has(t.id)).map((t) => {
                           const I = iconMap[t.icon];
                           return (
                             <button key={t.id} onClick={() => openNew(t)}>
@@ -855,10 +952,27 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           }
                           aria-label="Filtrar verificación"
                         >
-                          <option value="todos">Todos los estados</option>
+                          <option value="todos">Toda verificación</option>
                           <option value="verificado">Verificado</option>
                           <option value="pendiente">Pendiente</option>
                           <option value="por_confirmar">Por confirmar</option>
+                        </select>
+                        <ChevronDown size={14} />
+                      </label>
+                      <label className="filter-select">
+                        <select
+                          value={usageFilter}
+                          onChange={(e) =>
+                            setUsageFilter(e.target.value as EquipmentState | 'todos')
+                          }
+                          aria-label="Filtrar estado de uso de equipos"
+                        >
+                          <option value="todos">Cualquier estado de uso</option>
+                          {EQUIPMENT_STATES.map((state) => (
+                            <option key={state} value={state}>
+                              {state}
+                            </option>
+                          ))}
                         </select>
                         <ChevronDown size={14} />
                       </label>
@@ -892,6 +1006,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               <th>REGISTRO</th>
                               <th>SEDE Y UBICACIÓN</th>
                               <th>DETALLES</th>
+                              <th>USO DEL EQUIPO</th>
                               <th>VERIFICACIÓN</th>
                               <th>ACTUALIZADO</th>
                               <th>
@@ -925,6 +1040,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                     </small>
                                   </td>
                                   <td className="detail-cell">{summary(r, records)}</td>
+                                  <td>
+                                    {r.kind === 'equipo' ? (
+                                      <UsageStatus value={equipmentUsage(r)} />
+                                    ) : (
+                                      '—'
+                                    )}
+                                  </td>
                                   <td>
                                     <Status value={r.verification} />
                                   </td>
@@ -1509,12 +1631,17 @@ function TopologyDiagram({
   const panels = records.filter((r) => r.site === site && r.kind === 'panel');
   const nodes = [...equipment, ...panels];
   const columns = [
-    nodes.filter((r) => r.kind === 'equipo' && r.payload.tipo === 'switch'),
     nodes.filter(
-      (r) => (r.kind === 'equipo' && r.payload.tipo === 'servidor') || r.kind === 'panel',
+      (r) => r.kind === 'equipo' && ['switch', 'router', 'firewall'].includes(r.payload.tipo),
     ),
     nodes.filter(
-      (r) => r.kind === 'equipo' && r.payload.tipo !== 'switch' && r.payload.tipo !== 'servidor',
+      (r) =>
+        (r.kind === 'equipo' && ['servidor', 'nas'].includes(r.payload.tipo)) || r.kind === 'panel',
+    ),
+    nodes.filter(
+      (r) =>
+        r.kind === 'equipo' &&
+        !['switch', 'router', 'firewall', 'servidor', 'nas'].includes(r.payload.tipo),
     ),
   ];
   const positions = new Map<string, { x: number; y: number }>();
@@ -1530,6 +1657,10 @@ function TopologyDiagram({
     type: 'troncal' | 'puerto' | 'nodo';
     name: string;
   }[] = [];
+  const linkName = (record: RecordItem) => {
+    const cable = records.find((item) => item.id === record.payload.cable);
+    return cable ? `${record.name} · Cable ${cable.payload.codigo || cable.name}` : record.name;
+  };
   for (const r of records.filter((r) => r.site === site)) {
     if (r.kind === 'troncal' && positions.has(r.payload.origen) && positions.has(r.payload.destino))
       links.push({
@@ -1537,7 +1668,7 @@ function TopologyDiagram({
         from: r.payload.origen,
         to: r.payload.destino,
         type: 'troncal',
-        name: r.name,
+        name: linkName(r),
       });
     if (r.kind === 'puerto' && positions.has(r.payload.switch) && positions.has(r.payload.destino))
       links.push({
@@ -1545,7 +1676,7 @@ function TopologyDiagram({
         from: r.payload.switch,
         to: r.payload.destino,
         type: 'puerto',
-        name: r.name,
+        name: linkName(r),
       });
     if (r.kind === 'nodo' && positions.has(r.payload.panel) && positions.has(r.payload.destino))
       links.push({
@@ -1670,6 +1801,7 @@ function TopologyDiagram({
                   >
                     <title>
                       {r.name} · {kindTitle(r)} · {VERIFICATION_LABELS[r.verification]}
+                      {r.kind === 'equipo' ? ` · ${equipmentUsage(r)}` : ''}
                     </title>
                     <rect
                       x={pos.x}
@@ -1677,8 +1809,18 @@ function TopologyDiagram({
                       width="208"
                       height="68"
                       rx="14"
-                      fill="#fff"
-                      stroke={r.verification === 'verificado' ? '#a9d6c8' : '#dbe4e9'}
+                      fill={
+                        r.kind === 'equipo' && equipmentUsage(r) === 'No utilizado'
+                          ? '#f3f6f7'
+                          : '#fff'
+                      }
+                      stroke={
+                        r.kind === 'equipo' && equipmentUsage(r) === 'Inactivo'
+                          ? '#e6c498'
+                          : r.verification === 'verificado'
+                            ? '#a9d6c8'
+                            : '#dbe4e9'
+                      }
                       strokeWidth="1.5"
                     />
                     <rect
@@ -1697,17 +1839,7 @@ function TopologyDiagram({
                       fontWeight="700"
                       fill="#245871"
                     >
-                      {r.kind === 'panel'
-                        ? 'PP'
-                        : r.payload.tipo === 'switch'
-                          ? 'SW'
-                          : r.payload.tipo === 'servidor'
-                            ? 'SV'
-                            : r.payload.tipo === 'punto_acceso'
-                              ? 'AP'
-                              : r.payload.tipo === 'telefono_ip'
-                                ? 'IP'
-                                : 'PR'}
+                      {r.kind === 'panel' ? 'PP' : (equipmentCode[r.payload.tipo] ?? 'EQ')}
                     </text>
                     <text
                       x={pos.x + 69}
@@ -1740,15 +1872,27 @@ function TopologyDiagram({
           </div>
         </div>
       )}
-      {(panels.length > 0 || records.some((r) => r.site === site && r.kind === 'rack')) && (
+      {(panels.length > 0 ||
+        records.some((r) => r.site === site && (r.kind === 'rack' || r.kind === 'cable'))) && (
         <div className="physical-strip">
-          <strong>Infraestructura física</strong>
+          <strong>Infraestructura física y cableado</strong>
           <div>
             {records
-              .filter((r) => r.site === site && (r.kind === 'rack' || r.kind === 'panel'))
+              .filter(
+                (r) =>
+                  r.site === site &&
+                  (r.kind === 'rack' || r.kind === 'panel' || r.kind === 'cable'),
+              )
               .map((r) => (
                 <button key={r.id} onClick={() => onSelect(r.id)}>
-                  {r.kind === 'rack' ? <PanelTop size={15} /> : <Grid2X2 size={15} />} {r.name}
+                  {r.kind === 'rack' ? (
+                    <PanelTop size={15} />
+                  ) : r.kind === 'cable' ? (
+                    <Cable size={15} />
+                  ) : (
+                    <Grid2X2 size={15} />
+                  )}{' '}
+                  {r.name}
                 </button>
               ))}
           </div>
@@ -1801,7 +1945,10 @@ function DetailPanel({
           <p>
             {kindTitle(record)} · {record.site}
           </p>
-          <Status value={record.verification} />
+          <div className="drawer-statuses">
+            <Status value={record.verification} />
+            {record.kind === 'equipo' && <UsageStatus value={equipmentUsage(record)} />}
+          </div>
           <div className="drawer-section">
             <h3>Información general</h3>
             <dl>
@@ -1879,8 +2026,8 @@ function RecordForm({
   const [verification, setVerification] = useState<Verification>(
     record?.verification ?? 'por_confirmar',
   );
-  const [payload, setPayload] = useState<Record<string, string>>(
-    () =>
+  const [payload, setPayload] = useState<Record<string, string>>(() => {
+    const initial =
       record?.payload ??
       (template.kind === 'equipo'
         ? { tipo: template.id }
@@ -1888,8 +2035,9 @@ function RecordForm({
           ? { semana: weekStart() }
           : template.kind === 'pendiente'
             ? { tipo: 'Pendiente', prioridad: 'Media' }
-            : {}),
-  );
+            : {});
+    return template.kind === 'equipo' ? { estadoUso: 'Por confirmar', ...initial } : initial;
+  });
   const setField = (key: string, value: string) => setPayload((p) => ({ ...p, [key]: value }));
   function fillWeeklyDraft() {
     const start = payload.semana || weekStart();
@@ -1898,12 +2046,13 @@ function RecordForm({
     const inWeek = (r: RecordItem) =>
       r.site === site && r.createdAt >= `${start}T00:00:00` && new Date(r.createdAt) < end;
     const equipment = all.filter((r) => r.kind === 'equipo' && inWeek(r));
+    const cables = all.filter((r) => r.kind === 'cable' && inWeek(r));
     const tests = all.filter((r) => r.kind === 'prueba' && inWeek(r));
     setPayload((p) => ({
       ...p,
-      avances: `Se ${equipment.length === 1 ? 'documentó' : 'documentaron'} ${equipment.length} ${equipment.length === 1 ? 'equipo' : 'equipos'} y se ${tests.length === 1 ? 'registró' : 'registraron'} ${tests.length} ${tests.length === 1 ? 'prueba' : 'pruebas'} durante la semana.`,
+      avances: `Se ${equipment.length === 1 ? 'documentó' : 'documentaron'} ${equipment.length} ${equipment.length === 1 ? 'equipo' : 'equipos'} y se ${tests.length === 1 ? 'registró' : 'registraron'} ${tests.length} ${tests.length === 1 ? 'prueba' : 'pruebas'} durante la semana.${cables.length ? ` Se documentaron ${cables.length} etiquetas de cable.` : ''}`,
       equipos: equipment.length
-        ? equipment.map((r) => `• ${r.name} (${kindTitle(r)})`).join('\n')
+        ? equipment.map((r) => `• ${r.name} (${kindTitle(r)}; ${equipmentUsage(r)})`).join('\n')
         : 'No se registraron equipos nuevos.',
       pruebas: tests.length
         ? tests.map((r) => `• ${r.name}: ${r.payload.resultado || 'por confirmar'}`).join('\n')
@@ -1962,10 +2111,12 @@ function RecordForm({
                   onChange={(e) => setName(e.target.value)}
                   placeholder={
                     template.kind === 'equipo'
-                      ? 'Ej. SW-CORE-01'
-                      : template.kind === 'reporte'
-                        ? 'Ej. Avance semanal de red'
-                        : 'Ej. Identificador del registro'
+                      ? `Ej. ${template.title} COL-01`
+                      : template.kind === 'cable'
+                        ? 'Ej. CBL-COL-001'
+                        : template.kind === 'reporte'
+                          ? 'Ej. Avance semanal de red'
+                          : 'Ej. Identificador del registro'
                   }
                 />
               </label>

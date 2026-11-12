@@ -15,12 +15,12 @@ Navegador (React)
             └── SQLite: records + changes
 ```
 
-- `records` guarda cada ficha con tipo, sede, ubicación, estado, datos específicos y fechas.
+- `records` guarda cada ficha con tipo, sede, ubicación, verificación, datos específicos y fechas. El estado de uso de los equipos vive en `payload.estadoUso`; las fichas anteriores sin ese campo se muestran como «Por confirmar».
 - `changes` conserva el actor local, la acción, la fecha y los campos modificados. La interfaz muestra los 500 eventos más recientes; la tabla conserva el historial completo.
 - Las referencias entre fichas usan identificadores de registro. Los enlaces troncales, puertos y nodos alimentan el visor de topología.
 - El inventario y los reportes se filtran en la interfaz por sede. La API valida tipos, sedes, estados, campos permitidos y tamaños antes de escribir.
 - Las escrituras usan transacciones. Las actualizaciones comprueban la fecha de la versión leída para detectar cambios concurrentes.
-- La aplicación señala referencias faltantes y duplicados de dirección IP o puerto de switch.
+- La aplicación señala referencias faltantes y duplicados de dirección IP, puerto de switch o código de etiqueta de cable.
 
 ## Límites actuales
 

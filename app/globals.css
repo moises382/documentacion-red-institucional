@@ -584,6 +584,44 @@ a {
   grid-template-columns: repeat(4, minmax(0, 1fr));
   gap: 13px;
 }
+.usage-overview {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+  margin-top: 14px;
+  padding: 18px 20px;
+}
+.usage-overview h3 {
+  margin: 5px 0 0;
+  color: #254858;
+  font-size: 15px;
+}
+.usage-overview-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(110px, 1fr));
+  gap: 8px;
+}
+.usage-overview-grid button {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 44px;
+  padding: 7px 10px;
+  border: 1px solid #e3ebed;
+  border-radius: 8px;
+  background: #fbfdfd;
+}
+.usage-overview-grid button:hover,
+.usage-overview-grid button:focus-visible {
+  border-color: #81b8ba;
+  background: #f4faf9;
+}
+.usage-overview-grid strong {
+  color: #284a58;
+  font-size: 16px;
+}
 .stat-card {
   display: flex;
   align-items: center;
@@ -985,7 +1023,7 @@ a {
 table {
   width: 100%;
   border-collapse: collapse;
-  min-width: 780px;
+  min-width: 940px;
   text-align: left;
 }
 th {
@@ -1099,6 +1137,38 @@ tbody tr:hover {
 .status-por_confirmar {
   color: #748b96;
   background: #edf2f4;
+}
+.usage-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 8px;
+  border-radius: 20px;
+  font-size: 10px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+.usage-status i {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.usage-status-activo {
+  color: #25865d;
+  background: #e6f5ec;
+}
+.usage-status-inactivo {
+  color: #a76b23;
+  background: #fff2df;
+}
+.usage-status-no-utilizado {
+  color: #64737d;
+  background: #edf0f2;
+}
+.usage-status-por-confirmar {
+  color: #557b8b;
+  background: #eaf3f7;
 }
 .empty-state {
   min-height: 290px;
@@ -1969,6 +2039,12 @@ tbody tr:hover {
   font-size: 11px;
   margin: 0 0 14px;
 }
+.drawer-statuses {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  flex-wrap: wrap;
+}
 .drawer-section {
   margin-top: 26px;
 }
@@ -2032,6 +2108,10 @@ tbody tr:hover {
   .stats-grid {
     grid-template-columns: repeat(2, 1fr);
   }
+  .usage-overview {
+    align-items: stretch;
+    flex-direction: column;
+  }
   .dashboard-bottom {
     grid-template-columns: 1fr;
   }
@@ -2088,6 +2168,12 @@ tbody tr:hover {
   }
 }
 @media (max-width: 640px) {
+  .usage-overview-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .usage-overview {
+    padding: 15px;
+  }
   .topbar {
     height: 64px;
     padding: 0 15px;

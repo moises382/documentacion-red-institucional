@@ -6,10 +6,11 @@ Repositorio público: [moises382/documentacion-red-institucional](https://github
 
 ## Funciones
 
-- Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos, racks, patch panels, enlaces troncales y dispositivos PoE.
-- Plantillas reutilizables para switches, impresoras, puntos de acceso, teléfonos IP y servidores.
+- Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos y cables, racks, patch panels, enlaces troncales y dispositivos PoE.
+- Plantillas reutilizables para switches, computadoras, laptops, impresoras, puntos de acceso, teléfonos IP, servidores, routers, firewalls, cámaras IP, UPS y NAS.
+- Estado de uso independiente de la verificación: **activo**, **inactivo**, **no utilizado** o **por confirmar**, con motivo y filtro en el inventario.
 - Diagrama de topología generado a partir de equipos y conexiones documentadas.
-- Pendientes, inconsistencias automáticas por IP o puerto duplicado, y registro de pruebas.
+- Pendientes, inconsistencias automáticas por IP, puerto o etiqueta de cable duplicados, y registro de pruebas.
 - Estados **verificado**, **pendiente** y **por confirmar**.
 - Historial de altas, cambios y eliminaciones.
 - Reportes semanales con borrador basado en los registros de la semana y descarga en Markdown.
