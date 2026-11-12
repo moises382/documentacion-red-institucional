@@ -1,0 +1,12 @@
+/node_modules/
+/.next/
+/out/
+/data/
+**/.env*
+*.sqlite
+*.sqlite-*
+*.db
+*.db-*
+/.DS_Store
+*.tsbuildinfo
+npm-debug.log*
