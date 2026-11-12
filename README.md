@@ -2,6 +2,8 @@
 
 Aplicación web en español para organizar el inventario y el seguimiento de un proyecto de documentación de red. Esta es la **versión personal de portafolio**: funciona en tu computadora con SQLite y puede cargarse con registros ficticios. No contiene información de una red institucional real.
 
+Repositorio público: [moises382/documentacion-red-institucional](https://github.com/moises382/documentacion-red-institucional).
+
 ## Funciones
 
 - Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos, racks, patch panels, enlaces troncales y dispositivos PoE.

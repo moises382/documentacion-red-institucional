@@ -15,10 +15,10 @@ npm --version
 
 En GitHub, abre el repositorio y selecciona **Code → Download ZIP**. Descomprime el archivo y abre una terminal dentro de la carpeta que contiene `package.json`.
 
-Si prefieres Git, usa la URL HTTPS que muestra el botón **Code**:
+Si prefieres Git, clona el repositorio público:
 
 ```bash
-git clone URL_QUE_MUESTRA_GITHUB
+git clone https://github.com/moises382/documentacion-red-institucional.git
 cd documentacion-red-institucional
 ```
 

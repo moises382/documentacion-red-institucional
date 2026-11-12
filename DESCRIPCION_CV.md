@@ -16,4 +16,4 @@ Aplicación de documentación y seguimiento de red institucional desarrollada co
 
 ## Cómo presentarlo
 
-En tu CV, enlaza el repositorio público y menciona que los datos publicados son ficticios. Si muestras la aplicación original de Sites, recuerda que su acceso es privado y otras personas no podrán abrirla sin invitación.
+En tu CV, enlaza [el repositorio público](https://github.com/moises382/documentacion-red-institucional) y menciona que los datos publicados son ficticios. Si muestras la aplicación original de Sites, recuerda que su acceso es privado y otras personas no podrán abrirla sin invitación.
