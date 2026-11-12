@@ -4,6 +4,36 @@ Aplicación web en español para organizar el inventario y el seguimiento de un 
 
 Repositorio público: [moises382/documentacion-red-institucional](https://github.com/moises382/documentacion-red-institucional).
 
+## Así se ve el proyecto
+
+Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real.
+
+### Resumen del proyecto
+
+![Panel de resumen con indicadores de documentación y estados de uso](docs/capturas/01-resumen.jpg)
+
+El inicio reúne equipos inventariados, registros verificados, pendientes y pruebas. También separa el **estado de uso del equipo** (activo, inactivo, no utilizado o por confirmar) del **estado de verificación de sus datos**, y muestra el avance por sede.
+
+### Inventario de equipos
+
+![Inventario filtrado por equipos con ubicación, estado de uso y verificación](docs/capturas/02-inventario-equipos.jpg)
+
+La tabla permite buscar y filtrar por sede, tipo de registro, verificación y estado de uso. En el ejemplo aparecen una computadora activa, una cámara inactiva y una laptop no utilizada; cada fila conserva su ubicación y un acceso para consultar o editar la ficha.
+
+### Etiquetas de cableado
+
+![Detalle de una etiqueta de cable con sus dos extremos y características](docs/capturas/03-etiqueta-cable.jpg)
+
+Cada cable puede documentarse con un código visible, etiqueta en ambos extremos, origen y destino físico, medio y categoría. Los datos que todavía faltan se muestran como **Por confirmar**, para que la ficha no dé una falsa impresión de estar completa.
+
+### Topología
+
+![Visor de topología con equipos y conexiones de demostración](docs/capturas/04-topologia.jpg)
+
+El visor organiza los equipos por sede y dibuja las conexiones registradas entre ellos. Es una representación de la documentación guardada: **no realiza un escaneo automático de la red**. Debajo de cada diagrama también aparecen las referencias físicas de cableado.
+
+Consulta la [galería completa con explicación de las seis pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
+
 ## Funciones
 
 - Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos y cables, racks, patch panels, enlaces troncales y dispositivos PoE.
