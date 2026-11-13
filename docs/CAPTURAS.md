@@ -8,7 +8,7 @@ Las imágenes siguientes son capturas de la **aplicación personal** ejecutada e
 
 Esta es la primera pantalla al abrir el proyecto. La fila de indicadores resume cuántos equipos están inventariados, cuántos registros se verificaron, cuántos pendientes siguen abiertos y cuántas pruebas se documentaron. Son cifras calculadas a partir de los registros de la base local, no valores fijos de la interfaz.
 
-La franja **Estado de uso** cuenta los equipos activos, inactivos, no utilizados y pendientes de confirmación. Al elegir una categoría se abre el inventario con ese filtro. Más abajo, **Verificación del inventario** mide la revisión de los datos y desglosa el avance por Colima, Tecomán, Manzanillo y Coquimatlán. Un equipo puede estar inactivo y tener sus datos verificados: ambas condiciones se registran por separado.
+La franja **Estado de uso** cuenta los equipos y componentes activos, inactivos, no utilizados y pendientes de confirmación. Al elegir una categoría se abre el inventario con ese filtro. Más abajo, **Verificación del inventario** mide la revisión de los datos y desglosa el avance por Colima, Tecomán, Manzanillo y Coquimatlán. Un equipo puede estar inactivo y tener sus datos verificados: ambas condiciones se registran por separado.
 
 ## 2. Inventario: localizar y clasificar equipos
 
@@ -48,7 +48,19 @@ Cada reporte tiene sede y estado de verificación, queda registrado en el histor
 
 La pantalla de plantillas ofrece formularios adaptados a **12 tipos de equipo**, entre ellos switch, computadora de escritorio, laptop, impresora, punto de acceso, teléfono IP, servidor, router, firewall, cámara IP, UPS y NAS. Cada tipo pide los datos pertinentes; por ejemplo, la computadora tiene inventario, sistema operativo y área usuaria, mientras que el switch permite registrar puertos y gestión.
 
-Hay otras **12 plantillas** para infraestructura y seguimiento: IP, puerto, VLAN, nodo, cable, rack, patch panel, enlace troncal, PoE, pendiente, prueba y reporte. Al pulsar **Usar plantilla** se abre un formulario editable. El registro se crea al guardar el formulario, y después puede consultarse o actualizarse desde su sección correspondiente.
+Hay otras **13 plantillas** para infraestructura y seguimiento: componente de teléfono IP, IP, puerto, VLAN, nodo, cable, rack, patch panel, enlace troncal, PoE, pendiente, prueba y reporte. Al pulsar **Usar plantilla** se abre un formulario editable. El registro se crea al guardar el formulario, y después puede consultarse o actualizarse desde su sección correspondiente.
+
+## 7. Teléfono IP: conexiones y accesorios
+
+![Detalle de un teléfono IP ficticio con componentes vinculados](capturas/07-telefono-componentes.jpg)
+
+La ficha de `TEL-DEMO-COL-02` reúne extensión, dirección MAC, IP, servidor de telefonía, puerto, etiqueta de cable, nodo, dispositivo PoE y computadora conectada al puerto PC. Las diademas, auriculares, módulos de expansión y fuentes pueden tener una ficha propia vinculada al teléfono. En la imagen se muestran una diadema activa y un adaptador que está en reserva: su estado de uso se sigue por separado del teléfono. El botón **Abrir credenciales del teléfono** lleva a la bóveda; la ficha técnica no contiene la contraseña.
+
+## 8. Bóveda: credenciales y respaldo cifrado
+
+![Pantalla inicial de la bóveda cifrada sin usuarios ni contraseñas reales](capturas/08-boveda.jpg)
+
+La bóveda se crea o abre con una frase maestra. Su pantalla permite añadir accesos vinculados a equipos, bloquear la sesión y descargar un respaldo cifrado. La captura muestra únicamente el estado inicial vacío. La clave maestra no se guarda ni se envía al servidor; si se pierde, tampoco puede abrirse un respaldo. Consulta [SEGURIDAD.md](SEGURIDAD.md) antes de guardar datos propios.
 
 ## Cómo recorrer la demostración
 
@@ -57,5 +69,6 @@ Hay otras **12 plantillas** para infraestructura y seguimiento: IP, puerto, VLAN
 3. En **Inventario**, prueba los filtros de sede, tipo, verificación y uso; abre una computadora o una etiqueta de cable.
 4. En **Topología**, compara el diagrama con los puertos y cables de ejemplo.
 5. En **Reportes semanales** y **Plantillas**, revisa cómo se documenta el trabajo y se añaden fichas nuevas.
+6. Usa el selector de idioma de la barra superior para cambiar entre español, inglés y portugués. En **Bóveda segura** puedes revisar el flujo de creación sin introducir secretos reales en la demostración.
 
 Los datos locales se guardan en `data/network.sqlite`, archivo excluido de Git. El proyecto público comparte el **código y estas capturas de demostración**; no publica la base de datos ni credenciales.

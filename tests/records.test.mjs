@@ -77,6 +77,36 @@ test('requiere switch e interfaz para documentar un puerto', () => {
   assert.match(result.message, /Switch/);
 });
 
+test('teléfonos IP y componentes tienen vínculos y estados documentables', () => {
+  const phone = validateRecord({
+    ...switchRecord,
+    name: 'TEL-DEMO-01',
+    payload: {
+      tipo: 'telefono_ip',
+      extension: '101',
+      mac: '02:00:00:00:00:01',
+      computadora: 'equipo-pc-1',
+      puerto: 'puerto-1',
+      estadoUso: 'Activo',
+    },
+  });
+  assert.equal(phone.message, undefined);
+  const component = validateRecord({
+    ...switchRecord,
+    kind: 'componente_telefono',
+    name: 'DIADEMA-DEMO-01',
+    payload: { telefono: 'telefono-1', tipo: 'Diadema', conexion: 'RJ9', estadoUso: 'No utilizado' },
+  });
+  assert.equal(component.message, undefined);
+  const invalid = validateRecord({
+    ...switchRecord,
+    kind: 'componente_telefono',
+    name: 'DIADEMA-DEMO-01',
+    payload: { telefono: 'telefono-1', tipo: 'Diadema', password: 'secreto' },
+  });
+  assert.equal(invalid.value, undefined);
+});
+
 test('el historial describe los campos modificados', () => {
   const before = { ...switchRecord, id: 'demo', createdAt: '2026-01-01', updatedAt: '2026-01-01' };
   const after = {

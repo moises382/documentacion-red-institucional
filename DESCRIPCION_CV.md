@@ -2,7 +2,7 @@
 
 ## Versión breve
 
-Desarrollé una aplicación web en español para documentar infraestructura de red: inventario editable de equipos y cableado, topología visual, seguimiento de equipos activos e inactivos, control de inconsistencias, historial de cambios y reportes semanales. Construida con Next.js, React, TypeScript y SQLite.
+Desarrollé una aplicación web multilingüe para documentar infraestructura de red: inventario editable de equipos, teléfonos IP y componentes, topología visual, seguimiento de activos, control de inconsistencias, historial y reportes semanales. Integré una bóveda de credenciales con cifrado en el navegador y respaldos cifrados. Construida con Next.js, React, TypeScript y SQLite.
 
 ## Versión con viñetas
 
@@ -10,10 +10,11 @@ Desarrollé una aplicación web en español para documentar infraestructura de r
 - Añadí seguimiento del estado de uso (activo, inactivo, no utilizado o por confirmar), filtros por sede y alertas para etiquetas repetidas.
 - Construí un visor de topología basado en los registros y alertas para direcciones IP o puertos duplicados.
 - Implementé una API con validación, persistencia transaccional en SQLite, historial de cambios y reportes semanales descargables.
+- Incorporé español, inglés y portugués, fichas vinculadas de accesorios de telefonía IP y una bóveda separada que cifra credenciales antes de guardarlas.
 
 ## Texto para describir el proyecto en GitHub
 
-Aplicación de documentación y seguimiento de red institucional desarrollada como proyecto personal. Permite organizar inventario, visualizar conexiones, registrar pruebas y pendientes, y generar reportes semanales. El repositorio incluye instrucciones para Windows y macOS y datos ficticios de demostración.
+Aplicación multilingüe de documentación y seguimiento de red institucional desarrollada como proyecto personal. Organiza inventario, telefonía IP y componentes, visualiza conexiones, registra pruebas y pendientes, genera reportes semanales y permite resguardar credenciales cifradas. Incluye instrucciones para Windows y macOS y datos ficticios de demostración.
 
 ## Cómo presentarlo
 

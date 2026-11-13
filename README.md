@@ -10,7 +10,7 @@ Estas capturas muestran la **versión personal ejecutada con datos ficticios** m
 
 ### Resumen del proyecto
 
-![Panel de resumen con indicadores de documentación y estados de uso](docs/capturas/01-resumen.jpg)
+![Panel moderno de resumen con indicadores de documentación y estados de uso](docs/capturas/01-resumen.jpg)
 
 El inicio reúne equipos inventariados, registros verificados, pendientes y pruebas. También separa el **estado de uso del equipo** (activo, inactivo, no utilizado o por confirmar) del **estado de verificación de sus datos**, y muestra el avance por sede.
 
@@ -32,19 +32,34 @@ Cada cable puede documentarse con un código visible, etiqueta en ambos extremos
 
 El visor organiza los equipos por sede y dibuja las conexiones registradas entre ellos. Es una representación de la documentación guardada: **no realiza un escaneo automático de la red**. Debajo de cada diagrama también aparecen las referencias físicas de cableado.
 
-Consulta la [galería completa con explicación de las seis pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
+### Teléfono IP y componentes
+
+![Ficha de teléfono IP con componentes vinculados](docs/capturas/07-telefono-componentes.jpg)
+
+La ficha del teléfono conecta la extensión, dirección MAC, servidor de telefonía, puerto de switch, cable, nodo, alimentación PoE y computadora conectada al puerto PC. Las diademas, auriculares, módulos y fuentes se documentan como componentes independientes, vinculados al teléfono y con su propio estado de uso.
+
+### Bóveda de credenciales
+
+![Pantalla de bóveda cifrada sin credenciales reales](docs/capturas/08-boveda.jpg)
+
+Los usuarios y contraseñas van en una **bóveda separada del inventario**. Se cifra en el navegador con una frase maestra; permite descargar e importar respaldos cifrados. La imagen muestra la bóveda vacía, sin secretos de demostración.
+
+Consulta la [galería completa con explicación de las ocho pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
 
 ## Funciones
 
 - Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos y cables, racks, patch panels, enlaces troncales y dispositivos PoE.
 - Plantillas reutilizables para switches, computadoras, laptops, impresoras, puntos de acceso, teléfonos IP, servidores, routers, firewalls, cámaras IP, UPS y NAS.
-- Estado de uso independiente de la verificación: **activo**, **inactivo**, **no utilizado** o **por confirmar**, con motivo y filtro en el inventario.
+- Fichas de componentes de teléfono IP: auriculares, diademas, módulos de expansión, fuentes, inyectores PoE y cables, vinculadas al teléfono.
+- Estado de uso de equipos y componentes independiente de la verificación: **activo**, **inactivo**, **no utilizado** o **por confirmar**, con motivo y filtro en el inventario.
 - Diagrama de topología generado a partir de equipos y conexiones documentadas.
 - Pendientes, inconsistencias automáticas por IP, puerto o etiqueta de cable duplicados, y registro de pruebas.
 - Estados **verificado**, **pendiente** y **por confirmar**.
 - Historial de altas, cambios y eliminaciones.
 - Reportes semanales con borrador basado en los registros de la semana y descarga en Markdown.
 - Filtros por Colima, Tecomán, Manzanillo y Coquimatlán.
+- Interfaz en español, inglés y portugués, con preferencia guardada en el navegador.
+- Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
 
 ## Tecnologías
 
@@ -80,7 +95,9 @@ npm run build
 
 ## Datos y privacidad
 
-Los registros locales se guardan en `data/network.sqlite`, carpeta excluida de Git. Los nombres e IP del script de demostración son ficticios; los rangos IP son de documentación. **No añadas contraseñas, tokens, claves ni datos reales de una red institucional al repositorio.**
+Los registros locales y la bóveda cifrada se guardan en `data/network.sqlite`, carpeta excluida de Git. Los nombres e IP del script de demostración son ficticios; los rangos IP son de documentación. **No añadas contraseñas, tokens, claves ni datos reales de una red institucional al repositorio.** Usa la bóveda para los secretos.
+
+La frase maestra nunca se envía ni se guarda. **Si la pierdes, no existe recuperación**; conserva la frase y un respaldo cifrado en lugares seguros. El respaldo descargado permanece cifrado. Consulta [SEGURIDAD.md](docs/SEGURIDAD.md) para el uso y los límites de esta función.
 
 La aplicación personal escucha en `127.0.0.1` y no incorpora inicio de sesión. Está pensada para ejecutarse en tu equipo y mostrar el código en GitHub. Para publicarla como servicio accesible por Internet se necesitaría añadir autenticación, control de permisos y una base de datos administrada. GitHub Pages no ejecuta esta aplicación de servidor.
 
@@ -90,6 +107,8 @@ La versión original alojada en Sites usa una base de datos en la nube y conserv
 
 - `app/dashboard.tsx`: interfaz, filtros, formularios y diagramas.
 - `app/api/data/route.ts`: operaciones de lectura y escritura.
+- `app/api/vault/route.ts` y `lib/vault.ts`: almacenamiento cifrado y cifrado en el navegador.
+- `app/i18n.tsx`: textos y preferencia de idioma.
 - `lib/models.ts`: tipos y plantillas de documentación.
 - `lib/record-validation.ts`: validación de los registros.
 - `lib/database.ts`: creación de tablas y acceso SQLite.

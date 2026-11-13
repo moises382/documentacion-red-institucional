@@ -39,6 +39,12 @@ export function getDatabase(): DatabaseSync {
     );
     CREATE INDEX IF NOT EXISTS changes_occurred_idx ON changes(occurred_at);
     CREATE INDEX IF NOT EXISTS changes_site_idx ON changes(site);
+    CREATE TABLE IF NOT EXISTS vaults (
+      owner_id TEXT PRIMARY KEY NOT NULL,
+      revision TEXT NOT NULL,
+      envelope TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
   `);
   cached.__networkDocumentationDb = database;
   return database;

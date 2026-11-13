@@ -22,9 +22,12 @@ import {
   Grid2X2,
   HardDrive,
   Hash,
+  Headphones,
+  Languages,
   Layers,
   LayoutDashboard,
   Laptop,
+  LockKeyhole,
   MapPin,
   Menu,
   Monitor,
@@ -48,6 +51,8 @@ import {
   ZoomOut,
   type LucideIcon,
 } from 'lucide-react';
+import { LANGUAGES, LanguageProvider, useI18n } from './i18n';
+import VaultPanel from './vault-panel';
 import {
   EQUIPMENT_LABELS,
   EQUIPMENT_STATES,
@@ -72,7 +77,8 @@ type View =
   | 'pendientes'
   | 'reportes'
   | 'historial'
-  | 'plantillas';
+  | 'plantillas'
+  | 'boveda';
 type SiteFilter = Site | 'Todas las sedes';
 type Modal = { mode: 'choose' } | { mode: 'form'; template: Template; record?: RecordItem } | null;
 const iconMap: Record<string, LucideIcon> = {
@@ -84,6 +90,7 @@ const iconMap: Record<string, LucideIcon> = {
   Camera,
   BatteryCharging,
   HardDrive,
+  Headphones,
   Printer,
   Wifi,
   Phone,
@@ -108,6 +115,7 @@ const nav: { id: View; title: string; icon: LucideIcon }[] = [
   { id: 'reportes', title: 'Reportes semanales', icon: FileText },
   { id: 'historial', title: 'Historial de cambios', icon: Activity },
   { id: 'plantillas', title: 'Plantillas', icon: Grid2X2 },
+  { id: 'boveda', title: 'Bóveda segura', icon: LockKeyhole },
 ];
 const inventoryKinds: Kind[] = [
   'equipo',
@@ -120,6 +128,7 @@ const inventoryKinds: Kind[] = [
   'panel',
   'troncal',
   'poe',
+  'componente_telefono',
 ];
 const quickEquipment = new Set(['switch', 'computadora', 'laptop', 'punto_acceso', 'servidor']);
 const equipmentCode: Record<string, string> = {
@@ -136,20 +145,18 @@ const equipmentCode: Record<string, string> = {
   ups: 'UPS',
   nas: 'NAS',
 };
-const day = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short', year: 'numeric' });
-const shortDay = new Intl.DateTimeFormat('es-MX', { day: '2-digit', month: 'short' });
 function parseDate(value: string) {
   return new Date(/^\d{4}-\d{2}-\d{2}$/.test(value) ? `${value}T12:00:00` : value);
 }
-function date(value?: string) {
+function date(value?: string, locale = 'es-MX') {
   if (!value) return '—';
   const d = parseDate(value);
-  return Number.isNaN(d.getTime()) ? value : day.format(d);
+  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
 }
-function shortDate(value?: string) {
+function shortDate(value?: string, locale = 'es-MX') {
   if (!value) return '—';
   const d = parseDate(value);
-  return Number.isNaN(d.getTime()) ? value : shortDay.format(d);
+  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short' }).format(d);
 }
 function weekStart() {
   const d = new Date();
@@ -165,13 +172,6 @@ function kindTitle(record: RecordItem) {
 function equipmentUsage(record: RecordItem): EquipmentState {
   const value = record.payload.estadoUso as EquipmentState;
   return EQUIPMENT_STATES.includes(value) ? value : 'Por confirmar';
-}
-function formTitle(template: Template) {
-  if (template.id === 'ip') return 'dirección IP';
-  if (template.id === 'telefono_ip') return 'teléfono IP';
-  if (template.id === 'poe') return 'dispositivo PoE';
-  if (template.id === 'vlan') return 'VLAN';
-  return template.title.toLowerCase();
 }
 function summary(record: RecordItem, all: RecordItem[]) {
   const p = record.payload;
@@ -203,6 +203,8 @@ function summary(record: RecordItem, all: RecordItem[]) {
       return [resolve(p.origen), resolve(p.destino)].filter(Boolean).join(' → ');
     case 'poe':
       return [resolve(p.equipo), p.consumo && `${p.consumo} W`].filter(Boolean).join(' · ');
+    case 'componente_telefono':
+      return [p.tipo, resolve(p.telefono), p.modelo].filter(Boolean).join(' · ');
     case 'pendiente':
       return [p.tipo, p.prioridad].filter(Boolean).join(' · ');
     case 'prueba':
@@ -215,20 +217,22 @@ function getIcon(record: RecordItem) {
   return iconMap[templateFor(record).icon] ?? HardDrive;
 }
 function Status({ value }: { value: Verification }) {
+  const { t } = useI18n();
   const I = value === 'verificado' ? CheckCircle2 : value === 'pendiente' ? Clock3 : CircleHelp;
   return (
     <span className={`status status-${value}`}>
       <I size={13} />
-      {VERIFICATION_LABELS[value]}
+      {t(VERIFICATION_LABELS[value])}
     </span>
   );
 }
 function UsageStatus({ value }: { value: EquipmentState }) {
+  const { t } = useI18n();
   const style = value.toLowerCase().replaceAll(' ', '-');
   return (
     <span className={`usage-status usage-status-${style}`}>
       <i aria-hidden="true" />
-      {value}
+      {t(value)}
     </span>
   );
 }
@@ -243,19 +247,29 @@ function Empty({
   description: string;
   action?: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="empty-state">
       <span className="empty-icon">
         <Icon size={26} />
       </span>
-      <h3>{title}</h3>
-      <p>{description}</p>
+      <h3>{t(title)}</h3>
+      <p>{t(description)}</p>
       {action}
     </div>
   );
 }
 
-export default function Dashboard({ displayName }: { displayName: string }) {
+export default function Dashboard({ displayName, hosted = false }: { displayName: string; hosted?: boolean }) {
+  return (
+    <LanguageProvider>
+      <DashboardContent displayName={displayName} hosted={hosted} />
+    </LanguageProvider>
+  );
+}
+
+function DashboardContent({ displayName, hosted }: { displayName: string; hosted: boolean }) {
+  const { language, setLanguage, t, dateLocale } = useI18n();
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [changes, setChanges] = useState<ChangeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -273,6 +287,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [workTab, setWorkTab] = useState<'pendientes' | 'pruebas'>('pendientes');
+  const [preferredVaultRecordId, setPreferredVaultRecordId] = useState('');
   const selected = records.find((r) => r.id === selectedId) ?? null;
 
   const reload = useCallback(async () => {
@@ -310,10 +325,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     [changes, site],
   );
   const equipment = scoped.filter((r) => r.kind === 'equipo');
+  const usableItems = scoped.filter(
+    (r) => r.kind === 'equipo' || r.kind === 'componente_telefono',
+  );
   const usageCounts = Object.fromEntries(
     EQUIPMENT_STATES.map((state) => [
       state,
-      equipment.filter((record) => equipmentUsage(record) === state).length,
+      usableItems.filter((record) => equipmentUsage(record) === state).length,
     ]),
   ) as Record<EquipmentState, number>;
   const pending = scoped.filter((r) => r.kind === 'pendiente' && r.verification !== 'verificado');
@@ -348,7 +366,9 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         .filter((r) => verificationFilter === 'todos' || r.verification === verificationFilter)
         .filter(
           (r) =>
-            usageFilter === 'todos' || (r.kind === 'equipo' && equipmentUsage(r) === usageFilter),
+            usageFilter === 'todos' ||
+            ((r.kind === 'equipo' || r.kind === 'componente_telefono') &&
+              equipmentUsage(r) === usageFilter),
         )
         .filter(
           (r) =>
@@ -473,8 +493,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
     a.click();
     URL.revokeObjectURL(url);
   }
-  const siteTitle = site === 'Todas las sedes' ? 'todas las sedes' : site;
-  const firstName = displayName.includes('@')
+  const siteTitle = site === 'Todas las sedes' ? t('Todas las sedes').toLowerCase() : site;
+  const firstName = displayName === 'Proyecto' ? t('Proyecto') : displayName.includes('@')
     ? displayName.split('@')[0]
     : displayName.split(' ')[0];
   return (
@@ -485,19 +505,19 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             <Network size={22} strokeWidth={2.3} />
           </div>
           <div>
-            <strong>Red Institucional</strong>
-            <span>Centro de documentación</span>
+            <strong>{t('Red Institucional')}</strong>
+            <span>{t('Centro de documentación')}</span>
           </div>
           <button
             className="mobile-close icon-button"
             onClick={() => setMobileMenu(false)}
-            aria-label="Cerrar menú"
+            aria-label={t('Cerrar menú')}
           >
             <X size={20} />
           </button>
         </div>
-        <div className="sidebar-label">ESPACIO DE TRABAJO</div>
-        <nav aria-label="Navegación principal">
+        <div className="sidebar-label">{t('ESPACIO DE TRABAJO')}</div>
+        <nav aria-label={t('Navegación principal')}>
           {nav.map((item) => (
             <button
               key={item.id}
@@ -505,7 +525,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               onClick={() => navigate(item.id)}
             >
               <item.icon size={18} />
-              <span>{item.title}</span>
+              <span>{t(item.title)}</span>
               {item.id === 'pendientes' && pending.length > 0 && <em>{pending.length}</em>}
             </button>
           ))}
@@ -514,22 +534,22 @@ export default function Dashboard({ displayName }: { displayName: string }) {
         <div className="privacy-box">
           <ShieldCheck size={17} />
           <div>
-            <strong>Datos locales</strong>
-            <span>La demo usa SQLite en tu equipo. No registres contraseñas.</span>
+            <strong>{t(hosted ? 'Espacio privado' : 'Datos locales')}</strong>
+            <span>{t(hosted ? 'Acceso privado. Las claves van en la bóveda cifrada.' : 'La demo usa SQLite en tu equipo. Las claves van en la bóveda cifrada.')}</span>
           </div>
         </div>
         <div className="user-card">
           <span className="avatar">{firstName.slice(0, 1).toUpperCase()}</span>
           <div>
             <strong>{firstName}</strong>
-            <span>Documentación de red</span>
+            <span>{t('Documentación de red')}</span>
           </div>
         </div>
       </aside>
       {mobileMenu && (
         <button
           className="menu-backdrop"
-          aria-label="Cerrar menú"
+          aria-label={t('Cerrar menú')}
           onClick={() => setMobileMenu(false)}
         />
       )}
@@ -538,24 +558,39 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           <button
             className="menu-button icon-button"
             onClick={() => setMobileMenu(true)}
-            aria-label="Abrir menú"
+            aria-label={t('Abrir menú')}
           >
             <Menu size={22} />
           </button>
           <div className="breadcrumbs">
-            <span>Proyecto</span>
+            <span>{t('Proyecto')}</span>
             <span className="breadcrumb-divider">/</span>
-            <strong>{nav.find((n) => n.id === view)?.title}</strong>
+            <strong>{t(nav.find((n) => n.id === view)?.title ?? '')}</strong>
           </div>
           <div className="topbar-actions">
+            <label className="language-select">
+              <Languages size={16} />
+              <select
+                value={language}
+                onChange={(event) => setLanguage(event.target.value as typeof language)}
+                aria-label={t('Idioma')}
+              >
+                {LANGUAGES.map((item) => (
+                  <option key={item.code} value={item.code}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+              <ChevronDown size={14} />
+            </label>
             <label className="site-select">
               <MapPin size={16} />
               <select
                 value={site}
                 onChange={(e) => setSite(e.target.value as SiteFilter)}
-                aria-label="Filtrar por sede"
+                aria-label={t('Filtrar por sede')}
               >
-                <option>Todas las sedes</option>
+                <option value="Todas las sedes">{t('Todas las sedes')}</option>
                 {SITES.map((s) => (
                   <option key={s}>{s}</option>
                 ))}
@@ -567,7 +602,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
               onClick={() => setModal({ mode: 'choose' })}
             >
               <Plus size={17} />
-              Nuevo registro
+              {t('Nuevo registro')}
             </button>
           </div>
         </header>
@@ -590,7 +625,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           {loading ? (
             <div className="loading">
               <span className="spinner" />
-              Cargando documentación…
+              {t('Cargando documentación…')}
             </div>
           ) : (
             <>
@@ -600,30 +635,27 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="hero-copy">
                       <span className="eyebrow">
                         <span className="live-dot" />
-                        PROYECTO PERSONAL · {siteTitle.toUpperCase()}
+                        {t(hosted ? 'PROYECTO ACTIVO' : 'PROYECTO PERSONAL')} · {siteTitle.toUpperCase()}
                       </span>
                       <h1>
-                        Tu red, documentada
+                        {t('Tu red, documentada')}
                         <br />
-                        <em>con claridad.</em>
+                        <em>{t('con claridad.')}</em>
                       </h1>
-                      <p>
-                        Inventario, verificación y seguimiento en un solo lugar. Esta versión guarda
-                        los datos en tu equipo.
-                      </p>
+                      <p>{t(hosted ? 'Inventario, cableado y seguimiento en un solo lugar. Retoma el trabajo desde cualquier equipo autorizado.' : 'Inventario, verificación y seguimiento en un solo lugar. Esta versión guarda los datos en tu equipo.')}</p>
                       <div className="hero-actions">
                         <button
                           className="button button-light"
                           onClick={() => setModal({ mode: 'choose' })}
                         >
                           <Plus size={17} />
-                          Agregar registro
+                          {t('Agregar registro')}
                         </button>
                         <button
                           className="button button-ghost-light"
                           onClick={() => navigate('topologia')}
                         >
-                          Ver topología <ArrowRight size={17} />
+                          {t('Ver topología')} <ArrowRight size={17} />
                         </button>
                       </div>
                     </div>
@@ -650,10 +682,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   </div>
                   <div className="section-heading">
                     <div>
-                      <span className="section-kicker">PANORAMA</span>
-                      <h2>Estado de la documentación</h2>
+                      <span className="section-kicker">{t('PANORAMA')}</span>
+                      <h2>{t('Estado de la documentación')}</h2>
                     </div>
-                    <span className="muted-small">Actualizado con tus registros</span>
+                    <span className="muted-small">{t('Actualizado con tus registros')}</span>
                   </div>
                   <div className="stats-grid">
                     <Stat
@@ -683,15 +715,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   </div>
                   <div className="usage-overview card">
                     <div>
-                      <span className="section-kicker">ESTADO DE USO</span>
-                      <h3>Equipos activos, inactivos y sin uso</h3>
+                      <span className="section-kicker">{t('ESTADO DE USO')}</span>
+                      <h3>{t('Equipos y componentes por estado')}</h3>
                     </div>
                     <div className="usage-overview-grid">
                       {EQUIPMENT_STATES.map((state) => (
                         <button
                           key={state}
                           onClick={() => {
-                            setKindFilter('equipo');
+                            setKindFilter('todos');
                             setUsageFilter(state);
                             setVerificationFilter('todos');
                             setSearch('');
@@ -708,14 +740,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="card progress-card">
                       <div className="card-title-row">
                         <div>
-                          <span className="section-kicker">AVANCE</span>
-                          <h3>Verificación del inventario</h3>
+                          <span className="section-kicker">{t('AVANCE')}</span>
+                          <h3>{t('Verificación del inventario')}</h3>
                         </div>
                         <span className="large-percent">{percentage}%</span>
                       </div>
                       <p>
-                        {documentable.filter((r) => r.verification === 'verificado').length} de{' '}
-                        {documentable.length} registros de inventario verificados.
+                        {documentable.filter((r) => r.verification === 'verificado').length} {t('de')}{' '}
+                        {documentable.length} {t('registros de inventario verificados.')}
                       </p>
                       <div className="progress-track">
                         <span style={{ width: `${percentage}%` }} />
@@ -723,15 +755,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       <div className="progress-legend">
                         <span>
                           <i className="legend-dot green" />
-                          Verificado
+                          {t('Verificado')}
                         </span>
                         <span>
                           <i className="legend-dot amber" />
-                          Pendiente
+                          {t('Pendiente')}
                         </span>
                         <span>
                           <i className="legend-dot gray" />
-                          Por confirmar
+                          {t('Por confirmar')}
                         </span>
                       </div>
                       <div className="site-breakdown">
@@ -768,18 +800,18 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="card attention-card">
                       <div className="card-title-row">
                         <div>
-                          <span className="section-kicker">SEGUIMIENTO</span>
-                          <h3>Requiere atención</h3>
+                          <span className="section-kicker">{t('SEGUIMIENTO')}</span>
+                          <h3>{t('Requiere atención')}</h3>
                         </div>
                         <button className="text-link" onClick={() => navigate('pendientes')}>
-                          Ver todos <ArrowRight size={14} />
+                          {t('Ver todos')} <ArrowRight size={14} />
                         </button>
                       </div>
                       {pending.length + automaticIssues.length === 0 ? (
                         <div className="compact-empty">
                           <CheckCircle2 size={30} />
-                          <strong>Sin pendientes abiertos</strong>
-                          <span>Los nuevos hallazgos aparecerán aquí.</span>
+                          <strong>{t('Sin pendientes abiertos')}</strong>
+                          <span>{t('Los nuevos hallazgos aparecerán aquí.')}</span>
                         </div>
                       ) : (
                         <div className="attention-list">
@@ -826,22 +858,22 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="card">
                       <div className="card-title-row">
                         <div>
-                          <span className="section-kicker">ACCESO RÁPIDO</span>
-                          <h3>Plantillas de equipo</h3>
+                          <span className="section-kicker">{t('ACCESO RÁPIDO')}</span>
+                          <h3>{t('Plantillas de equipo')}</h3>
                         </div>
                         <button className="text-link" onClick={() => navigate('plantillas')}>
-                          Todas <ArrowRight size={14} />
+                          {t('Todas')} <ArrowRight size={14} />
                         </button>
                       </div>
                       <div className="quick-templates">
-                        {TEMPLATES.filter((t) => quickEquipment.has(t.id)).map((t) => {
-                          const I = iconMap[t.icon];
+                        {TEMPLATES.filter((template) => quickEquipment.has(template.id)).map((template) => {
+                          const I = iconMap[template.icon];
                           return (
-                            <button key={t.id} onClick={() => openNew(t)}>
+                            <button key={template.id} onClick={() => openNew(template)}>
                               <span className="quick-icon">
                                 <I size={20} />
                               </span>
-                              <strong>{t.title}</strong>
+                              <strong>{t(template.title)}</strong>
                               <Plus size={16} />
                             </button>
                           );
@@ -851,18 +883,18 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="card activity-card">
                       <div className="card-title-row">
                         <div>
-                          <span className="section-kicker">BITÁCORA</span>
-                          <h3>Actividad reciente</h3>
+                          <span className="section-kicker">{t('BITÁCORA')}</span>
+                          <h3>{t('Actividad reciente')}</h3>
                         </div>
                         <button className="text-link" onClick={() => navigate('historial')}>
-                          Historial <ArrowRight size={14} />
+                          {t('Historial')} <ArrowRight size={14} />
                         </button>
                       </div>
                       {visibleChanges.length === 0 ? (
                         <div className="compact-empty">
                           <Clock3 size={26} />
-                          <strong>Aún no hay cambios</strong>
-                          <span>Tu actividad se registrará aquí.</span>
+                          <strong>{t('Aún no hay cambios')}</strong>
+                          <span>{t('Tu actividad se registrará aquí.')}</span>
                         </div>
                       ) : (
                         visibleChanges.slice(0, 4).map((c) => (
@@ -871,10 +903,10 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                             <div>
                               <strong>{c.name}</strong>
                               <span>
-                                {c.action} · {c.site}
+                                {t(c.action)} · {c.site}
                               </span>
                             </div>
-                            <time>{shortDate(c.occurredAt)}</time>
+                            <time>{shortDate(c.occurredAt, dateLocale)}</time>
                           </div>
                         ))
                       )}
@@ -894,14 +926,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() => setModal({ mode: 'choose' })}
                       >
                         <Plus size={17} />
-                        Nuevo registro
+                        {t('Nuevo registro')}
                       </button>
                     }
                   />
                   <div className="inventory-summary">
                     <span>
                       <Boxes size={17} />
-                      {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} registros
+                      {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} {t('registros')}
                     </span>
                     <span>
                       <CheckCircle2 size={17} />
@@ -910,7 +942,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           (r) => inventoryKinds.includes(r.kind) && r.verification === 'verificado',
                         ).length
                       }{' '}
-                      verificados
+                      {t('verificados')}
                     </span>
                     <span>
                       <MapPin size={17} />
@@ -924,8 +956,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         <input
                           value={search}
                           onChange={(e) => setSearch(e.target.value)}
-                          placeholder="Buscar nombre, IP, etiqueta…"
-                          aria-label="Buscar registros"
+                          placeholder={t('Buscar nombre, IP, etiqueta…')}
+                          aria-label={t('Buscar registros')}
                         />
                       </label>
                       <label className="filter-select">
@@ -933,12 +965,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         <select
                           value={kindFilter}
                           onChange={(e) => setKindFilter(e.target.value as Kind | 'todos')}
-                          aria-label="Filtrar tipo"
+                          aria-label={t('Filtrar tipo')}
                         >
-                          <option value="todos">Todos los tipos</option>
+                          <option value="todos">{t('Todos los tipos')}</option>
                           {inventoryKinds.map((k) => (
                             <option value={k} key={k}>
-                              {KIND_LABELS[k]}
+                              {t(KIND_LABELS[k])}
                             </option>
                           ))}
                         </select>
@@ -950,12 +982,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           onChange={(e) =>
                             setVerificationFilter(e.target.value as Verification | 'todos')
                           }
-                          aria-label="Filtrar verificación"
+                          aria-label={t('Filtrar verificación')}
                         >
-                          <option value="todos">Toda verificación</option>
-                          <option value="verificado">Verificado</option>
-                          <option value="pendiente">Pendiente</option>
-                          <option value="por_confirmar">Por confirmar</option>
+                          <option value="todos">{t('Toda verificación')}</option>
+                          <option value="verificado">{t('Verificado')}</option>
+                          <option value="pendiente">{t('Pendiente')}</option>
+                          <option value="por_confirmar">{t('Por confirmar')}</option>
                         </select>
                         <ChevronDown size={14} />
                       </label>
@@ -965,12 +997,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           onChange={(e) =>
                             setUsageFilter(e.target.value as EquipmentState | 'todos')
                           }
-                          aria-label="Filtrar estado de uso de equipos"
+                          aria-label={t('Filtrar estado de uso de equipos')}
                         >
-                          <option value="todos">Cualquier estado de uso</option>
+                          <option value="todos">{t('Cualquier estado de uso')}</option>
                           {EQUIPMENT_STATES.map((state) => (
                             <option key={state} value={state}>
-                              {state}
+                              {t(state)}
                             </option>
                           ))}
                         </select>
@@ -993,7 +1025,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               onClick={() => setModal({ mode: 'choose' })}
                             >
                               <Plus size={16} />
-                              Crear primer registro
+                              {t('Crear primer registro')}
                             </button>
                           ) : undefined
                         }
@@ -1003,14 +1035,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         <table>
                           <thead>
                             <tr>
-                              <th>REGISTRO</th>
-                              <th>SEDE Y UBICACIÓN</th>
-                              <th>DETALLES</th>
-                              <th>USO DEL EQUIPO</th>
-                              <th>VERIFICACIÓN</th>
-                              <th>ACTUALIZADO</th>
+                              <th>{t('REGISTRO')}</th>
+                              <th>{t('SEDE Y UBICACIÓN')}</th>
+                              <th>{t('DETALLES')}</th>
+                              <th>{t('USO DEL EQUIPO')}</th>
+                              <th>{t('VERIFICACIÓN')}</th>
+                              <th>{t('ACTUALIZADO')}</th>
                               <th>
-                                <span className="sr-only">Acciones</span>
+                                <span className="sr-only">{t('Acciones')}</span>
                               </th>
                             </tr>
                           </thead>
@@ -1029,19 +1061,19 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                       </span>
                                       <span>
                                         <strong>{r.name}</strong>
-                                        <small>{kindTitle(r)}</small>
+                                        <small>{t(kindTitle(r))}</small>
                                       </span>
                                     </button>
                                   </td>
                                   <td>
                                     <strong className="table-main">{r.site}</strong>
                                     <small className="table-sub">
-                                      {r.location || 'Ubicación por confirmar'}
+                                      {r.location || t('Ubicación por confirmar')}
                                     </small>
                                   </td>
                                   <td className="detail-cell">{summary(r, records)}</td>
                                   <td>
-                                    {r.kind === 'equipo' ? (
+                                    {r.kind === 'equipo' || r.kind === 'componente_telefono' ? (
                                       <UsageStatus value={equipmentUsage(r)} />
                                     ) : (
                                       '—'
@@ -1050,7 +1082,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                   <td>
                                     <Status value={r.verification} />
                                   </td>
-                                  <td className="date-cell">{shortDate(r.updatedAt)}</td>
+                                  <td className="date-cell">{shortDate(r.updatedAt, dateLocale)}</td>
                                   <td>
                                     <button
                                       className="row-action"
@@ -1069,8 +1101,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     )}
                     {filteredInventory.length > 0 && (
                       <div className="table-footer">
-                        Mostrando {filteredInventory.length} de{' '}
-                        {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} registros
+                        {t('Mostrando')} {filteredInventory.length} {t('de')}{' '}
+                        {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} {t('registros')}
                       </div>
                     )}
                   </div>
@@ -1088,7 +1120,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() => openNew(TEMPLATES.find((t) => t.kind === 'troncal')!)}
                       >
                         <GitBranch size={17} />
-                        Nuevo enlace
+                        {t('Nuevo enlace')}
                       </button>
                     }
                   />
@@ -1096,15 +1128,15 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     <div className="legend">
                       <span>
                         <i className="line-swatch solid" />
-                        Enlace troncal
+                        {t('Enlace troncal')}
                       </span>
                       <span>
                         <i className="line-swatch dashed" />
-                        Puerto de switch
+                        {t('Puerto de switch')}
                       </span>
                       <span>
                         <i className="legend-dot green" />
-                        Verificado
+                        {t('Verificado')}
                       </span>
                     </div>
                     <div className="zoom-actions">
@@ -1112,7 +1144,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() =>
                           setZoom((z) => Math.max(0.7, Math.round((z - 0.15) * 100) / 100))
                         }
-                        aria-label="Alejar"
+                        aria-label={t('Alejar')}
                       >
                         <ZoomOut size={17} />
                       </button>
@@ -1121,7 +1153,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() =>
                           setZoom((z) => Math.min(1.6, Math.round((z + 0.15) * 100) / 100))
                         }
-                        aria-label="Acercar"
+                        aria-label={t('Acercar')}
                       >
                         <ZoomIn size={17} />
                       </button>
@@ -1139,7 +1171,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   ))}
                   {crossSiteLinks.length > 0 && (
                     <div className="card cross-links">
-                      <h3>Enlaces entre sedes</h3>
+                      <h3>{t('Enlaces entre sedes')}</h3>
                       {crossSiteLinks.map((r) => (
                         <button key={r.id} onClick={() => setSelectedId(r.id)}>
                           <GitBranch size={17} />
@@ -1163,7 +1195,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() => openNew(TEMPLATES.find((t) => t.kind === 'pendiente')!)}
                       >
                         <Plus size={17} />
-                        Nuevo pendiente
+                        {t('Nuevo pendiente')}
                       </button>
                     }
                   />
@@ -1172,7 +1204,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       className={workTab === 'pendientes' ? 'selected' : ''}
                       onClick={() => setWorkTab('pendientes')}
                     >
-                      Pendientes{' '}
+                      {t('Pendientes')}{' '}
                       <span>
                         {scoped.filter((r) => r.kind === 'pendiente').length +
                           automaticIssues.length}
@@ -1182,7 +1214,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                       className={workTab === 'pruebas' ? 'selected' : ''}
                       onClick={() => setWorkTab('pruebas')}
                     >
-                      Pruebas realizadas <span>{tests.length}</span>
+                      {t('Pruebas realizadas')} <span>{tests.length}</span>
                     </button>
                   </div>
                   {workTab === 'pendientes' ? (
@@ -1191,14 +1223,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         <div className="auto-issues">
                           <div className="auto-heading">
                             <Zap size={17} />
-                            <strong>Inconsistencias detectadas automáticamente</strong>
+                            <strong>{t('Inconsistencias detectadas automáticamente')}</strong>
                             <span>{automaticIssues.length}</span>
                           </div>
                           {automaticIssues.map((item, i) => (
                             <div key={i} className="auto-issue">
                               <AlertCircle size={18} />
                               <div>
-                                <strong>{item.title}</strong>
+                                <strong>{t(item.title)}</strong>
                                 <p>{item.description}</p>
                               </div>
                               <span className="location-tag">{item.site}</span>
@@ -1219,7 +1251,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               }
                             >
                               <Plus size={16} />
-                              Registrar pendiente
+                              {t('Registrar pendiente')}
                             </button>
                           }
                         />
@@ -1237,12 +1269,12 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                   <span
                                     className={`priority priority-${(r.payload.prioridad || 'Media').toLowerCase()}`}
                                   >
-                                    {r.payload.prioridad || 'Media'}
+                                    {t(r.payload.prioridad || 'Media')}
                                   </span>
                                   <Status value={r.verification} />
                                 </div>
                                 <h3>{r.name}</h3>
-                                <p>{r.payload.detalle || 'Sin descripción'}</p>
+                                <p>{r.payload.detalle || t('Sin descripción')}</p>
                                 <div className="issue-meta">
                                   <span>
                                     <MapPin size={14} />
@@ -1251,8 +1283,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                                   <span>
                                     <Clock3 size={14} />
                                     {r.payload.fechaLimite
-                                      ? date(r.payload.fechaLimite)
-                                      : 'Sin fecha límite'}
+                                      ? date(r.payload.fechaLimite, dateLocale)
+                                      : t('Sin fecha límite')}
                                   </span>
                                 </div>
                               </button>
@@ -1263,13 +1295,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   ) : (
                     <>
                       <div className="subview-actions">
-                        <p>Conserva el resultado y la evidencia de cada validación.</p>
+                        <p>{t('Conserva el resultado y la evidencia de cada validación.')}</p>
                         <button
                           className="button button-secondary"
                           onClick={() => openNew(TEMPLATES.find((t) => t.kind === 'prueba')!)}
                         >
                           <Plus size={16} />
-                          Registrar prueba
+                          {t('Registrar prueba')}
                         </button>
                       </div>
                       {tests.length === 0 ? (
@@ -1294,13 +1326,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               <span className="test-main">
                                 <strong>{r.name}</strong>
                                 <small>
-                                  {r.payload.tipo || 'Prueba'} · {r.site}
+                                  {t(r.payload.tipo || 'Prueba')} · {r.site}
                                 </small>
                               </span>
                               <span className="test-result">
-                                {r.payload.resultado || 'Por confirmar'}
+                                {t(r.payload.resultado || 'Por confirmar')}
                               </span>
-                              <time>{date(r.payload.fecha)}</time>
+                              <time>{date(r.payload.fecha, dateLocale)}</time>
                               <ArrowRight size={17} />
                             </button>
                           ))}
@@ -1322,16 +1354,16 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                         onClick={() => openNew(TEMPLATES.find((t) => t.kind === 'reporte')!)}
                       >
                         <Plus size={17} />
-                        Nuevo reporte
+                        {t('Nuevo reporte')}
                       </button>
                     }
                   />
                   <div className="report-intro">
                     <FileText size={25} />
                     <div>
-                      <strong>Una bitácora útil para tomar decisiones</strong>
+                      <strong>{t('Una bitácora útil para tomar decisiones')}</strong>
                       <span>
-                        Cada creación y edición de reporte aparece en el historial de cambios.
+                        {t('Cada creación y edición de reporte aparece en el historial de cambios.')}
                       </span>
                     </div>
                   </div>
@@ -1346,7 +1378,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           onClick={() => openNew(TEMPLATES.find((t) => t.kind === 'reporte')!)}
                         >
                           <Plus size={16} />
-                          Crear reporte
+                          {t('Crear reporte')}
                         </button>
                       }
                     />
@@ -1363,30 +1395,30 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                               <Status value={r.verification} />
                             </div>
                             <span className="section-kicker">
-                              {r.site.toUpperCase()} · SEMANA DEL{' '}
-                              {shortDate(r.payload.semana).toUpperCase()}
+                              {r.site.toUpperCase()} · {t('SEMANA DEL')}{' '}
+                              {shortDate(r.payload.semana, dateLocale).toUpperCase()}
                             </span>
                             <h3>{r.name}</h3>
-                            <p>{r.payload.avances || 'Sin avances descritos.'}</p>
+                            <p>{r.payload.avances || t('Sin avances descritos.')}</p>
                             <div className="report-metrics">
                               <span>
                                 <Boxes size={15} />
-                                Equipos
+                                {t('Equipos')}
                               </span>
                               <span>
                                 <FlaskConical size={15} />
-                                Pruebas
+                                {t('Pruebas')}
                               </span>
                               <span>
                                 <ArrowRight size={15} />
-                                Próximos pasos
+                                {t('Próximos pasos')}
                               </span>
                             </div>
                             <div className="report-actions">
-                              <button onClick={() => setSelectedId(r.id)}>Ver detalle</button>
+                              <button onClick={() => setSelectedId(r.id)}>{t('Ver detalle')}</button>
                               <button onClick={() => downloadReport(r)}>
                                 <ArrowDownToLine size={15} />
-                                Descargar
+                                {t('Descargar')}
                               </button>
                             </div>
                           </article>
@@ -1411,8 +1443,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                   ) : (
                     <div className="history-card card">
                       <div className="history-head">
-                        <strong>{visibleChanges.length} cambios recientes</strong>
-                        <span>Se muestran los 500 más recientes del proyecto</span>
+                        <strong>{visibleChanges.length} {t('cambios recientes')}</strong>
+                        <span>{t('Se muestran los 500 más recientes del proyecto')}</span>
                       </div>
                       {visibleChanges.map((c) => (
                         <div className="history-item" key={c.id}>
@@ -1427,14 +1459,14 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                           </span>
                           <div className="history-content">
                             <strong>
-                              {c.name} <span>{c.action}</span>
+                              {c.name} <span>{t(c.action)}</span>
                             </strong>
                             <p>{c.description}</p>
                             <small>
-                              {KIND_LABELS[c.kind]} · {c.site} · {c.actor}
+                              {t(KIND_LABELS[c.kind])} · {c.site} · {c.actor}
                             </small>
                           </div>
-                          <time>{date(c.occurredAt)}</time>
+                          <time>{date(c.occurredAt, dateLocale)}</time>
                         </div>
                       ))}
                     </div>
@@ -1449,8 +1481,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     description="Empieza con una ficha adaptada a cada equipo o componente de la red."
                   />
                   <div className="template-heading">
-                    <h3>Equipos</h3>
-                    <span>{TEMPLATES.filter((t) => t.kind === 'equipo').length} plantillas</span>
+                    <h3>{t('Equipos')}</h3>
+                    <span>{TEMPLATES.filter((item) => item.kind === 'equipo').length} {t('plantillas')}</span>
                   </div>
                   <div className="template-grid">
                     {TEMPLATES.filter((t) => t.kind === 'equipo').map((t) => (
@@ -1458,8 +1490,8 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     ))}
                   </div>
                   <div className="template-heading">
-                    <h3>Infraestructura y seguimiento</h3>
-                    <span>{TEMPLATES.filter((t) => t.kind !== 'equipo').length} plantillas</span>
+                    <h3>{t('Infraestructura y seguimiento')}</h3>
+                    <span>{TEMPLATES.filter((item) => item.kind !== 'equipo').length} {t('plantillas')}</span>
                   </div>
                   <div className="template-grid">
                     {TEMPLATES.filter((t) => t.kind !== 'equipo').map((t) => (
@@ -1467,6 +1499,13 @@ export default function Dashboard({ displayName }: { displayName: string }) {
                     ))}
                   </div>
                 </section>
+              )}
+              {view === 'boveda' && (
+                <VaultPanel
+                  records={records}
+                  site={site}
+                  preferredRecordId={preferredVaultRecordId}
+                />
               )}
             </>
           )}
@@ -1479,6 +1518,11 @@ export default function Dashboard({ displayName }: { displayName: string }) {
           onClose={() => setSelectedId(null)}
           onEdit={() => openEdit(selected)}
           onDelete={() => void remove(selected)}
+          onVault={() => {
+            setPreferredVaultRecordId(selected.id);
+            setSelectedId(null);
+            navigate('boveda');
+          }}
         />
       )}
       {modal?.mode === 'choose' && (
@@ -1492,25 +1536,25 @@ export default function Dashboard({ displayName }: { displayName: string }) {
             className="chooser modal"
             role="dialog"
             aria-modal="true"
-            aria-label="Seleccionar plantilla"
+            aria-label={t('Seleccionar plantilla')}
           >
             <div className="modal-head">
               <div>
-                <span className="section-kicker">NUEVO REGISTRO</span>
-                <h2>¿Qué quieres documentar?</h2>
+                <span className="section-kicker">{t('NUEVO REGISTRO')}</span>
+                <h2>{t('¿Qué quieres documentar?')}</h2>
               </div>
               <button className="icon-button" onClick={() => setModal(null)} aria-label="Cerrar">
                 <X size={20} />
               </button>
             </div>
             <div className="chooser-scroll">
-              <div className="chooser-label">EQUIPOS</div>
+              <div className="chooser-label">{t('EQUIPOS')}</div>
               <div className="chooser-grid">
                 {TEMPLATES.filter((t) => t.kind === 'equipo').map((t) => (
                   <TemplateCard key={t.id} template={t} onClick={() => openNew(t)} />
                 ))}
               </div>
-              <div className="chooser-label">INFRAESTRUCTURA Y SEGUIMIENTO</div>
+              <div className="chooser-label">{t('INFRAESTRUCTURA Y SEGUIMIENTO')}</div>
               <div className="chooser-grid">
                 {TEMPLATES.filter((t) => t.kind !== 'equipo').map((t) => (
                   <TemplateCard key={t.id} template={t} onClick={() => openNew(t)} />
@@ -1545,7 +1589,7 @@ export default function Dashboard({ displayName }: { displayName: string }) {
       {toast && (
         <div className="toast" role="status">
           <Check size={17} />
-          {toast}
+          {t(toast)}
         </div>
       )}
     </div>
@@ -1563,6 +1607,7 @@ function Stat({
   value: number;
   color: string;
 }) {
+  const { t } = useI18n();
   return (
     <div className="stat-card card">
       <span className={`stat-icon stat-${color}`}>
@@ -1570,7 +1615,7 @@ function Stat({
       </span>
       <div>
         <strong>{value}</strong>
-        <span>{label}</span>
+        <span>{t(label)}</span>
       </div>
       <ArrowRight className="stat-arrow" size={16} />
     </div>
@@ -1587,28 +1632,30 @@ function PageHeader({
   description: string;
   action?: ReactNode;
 }) {
+  const { t } = useI18n();
   return (
     <div className="page-header">
       <div>
-        <span className="section-kicker">{kicker}</span>
-        <h1>{title}</h1>
-        <p>{description}</p>
+        <span className="section-kicker">{t(kicker)}</span>
+        <h1>{t(title)}</h1>
+        <p>{t(description)}</p>
       </div>
       {action}
     </div>
   );
 }
 function TemplateCard({ template, onClick }: { template: Template; onClick: () => void }) {
+  const { t } = useI18n();
   const Icon = iconMap[template.icon] ?? Boxes;
   return (
     <button className="template-card card" onClick={onClick}>
       <span className="template-icon">
         <Icon size={23} />
       </span>
-      <strong>{template.title}</strong>
-      <p>{template.description}</p>
+      <strong>{t(template.title)}</strong>
+      <p>{t(template.description)}</p>
       <span className="template-action">
-        Usar plantilla <ArrowRight size={15} />
+        {t('Usar plantilla')} <ArrowRight size={15} />
       </span>
     </button>
   );
@@ -1627,6 +1674,7 @@ function TopologyDiagram({
   onSelect: (id: string) => void;
   onCreate: () => void;
 }) {
+  const { t } = useI18n();
   const equipment = records.filter((r) => r.site === site && r.kind === 'equipo');
   const panels = records.filter((r) => r.site === site && r.kind === 'panel');
   const nodes = [...equipment, ...panels];
@@ -1694,10 +1742,10 @@ function TopologyDiagram({
           <span className="site-dot" />
           <h3>{site}</h3>
           <span>
-            {equipment.length} equipos · {links.length} conexiones
+            {equipment.length} {t('equipos')} · {links.length} {t('conexiones')}
           </span>
         </div>
-        <span className="topology-card-tag">DIAGRAMA</span>
+        <span className="topology-card-tag">{t('DIAGRAMA')}</span>
       </div>
       {nodes.length === 0 ? (
         <div className="topology-empty">
@@ -1714,8 +1762,8 @@ function TopologyDiagram({
               <Wifi size={20} />
             </span>
           </div>
-          <h4>Sin equipos documentados en {site}</h4>
-          <p>Agrega equipos y sus conexiones para construir el diagrama automáticamente.</p>
+          <h4>{t('Sin equipos documentados en')} {site}</h4>
+          <p>{t('Agrega equipos y sus conexiones para construir el diagrama automáticamente.')}</p>
           <button className="button button-secondary" onClick={onCreate}>
             <Plus size={16} />
             Agregar switch
@@ -1873,15 +1921,15 @@ function TopologyDiagram({
         </div>
       )}
       {(panels.length > 0 ||
-        records.some((r) => r.site === site && (r.kind === 'rack' || r.kind === 'cable'))) && (
+        records.some((r) => r.site === site && (r.kind === 'rack' || r.kind === 'cable' || r.kind === 'componente_telefono'))) && (
         <div className="physical-strip">
-          <strong>Infraestructura física y cableado</strong>
+          <strong>{t('Infraestructura física y cableado')}</strong>
           <div>
             {records
               .filter(
                 (r) =>
                   r.site === site &&
-                  (r.kind === 'rack' || r.kind === 'panel' || r.kind === 'cable'),
+                  (r.kind === 'rack' || r.kind === 'panel' || r.kind === 'cable' || r.kind === 'componente_telefono'),
               )
               .map((r) => (
                 <button key={r.id} onClick={() => onSelect(r.id)}>
@@ -1889,6 +1937,8 @@ function TopologyDiagram({
                     <PanelTop size={15} />
                   ) : r.kind === 'cable' ? (
                     <Cable size={15} />
+                  ) : r.kind === 'componente_telefono' ? (
+                    <Headphones size={15} />
                   ) : (
                     <Grid2X2 size={15} />
                   )}{' '}
@@ -1908,16 +1958,20 @@ function DetailPanel({
   onClose,
   onEdit,
   onDelete,
+  onVault,
 }: {
   record: RecordItem;
   all: RecordItem[];
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onVault: () => void;
 }) {
+  const { t, dateLocale } = useI18n();
   const template = templateFor(record);
   const Icon = getIcon(record);
-  const resolve = (id: string) => all.find((r) => r.id === id)?.name ?? 'Referencia no encontrada';
+  const resolve = (id: string) =>
+    all.find((r) => r.id === id)?.name ?? t('Referencia no encontrada');
   return (
     <div
       className="drawer-scrim"
@@ -1929,11 +1983,11 @@ function DetailPanel({
         className="detail-drawer"
         role="dialog"
         aria-modal="true"
-        aria-label={`Detalle de ${record.name}`}
+        aria-label={t('Detalle de') + ' ' + record.name}
       >
         <div className="drawer-head">
-          <span>DETALLE DEL REGISTRO</span>
-          <button className="icon-button" onClick={onClose} aria-label="Cerrar">
+          <span>{t('DETALLE DEL REGISTRO')}</span>
+          <button className="icon-button" onClick={onClose} aria-label={t('Cerrar')}>
             <X size={20} />
           </button>
         </div>
@@ -1943,59 +1997,86 @@ function DetailPanel({
           </span>
           <h2>{record.name}</h2>
           <p>
-            {kindTitle(record)} · {record.site}
+            {t(kindTitle(record))} · {record.site}
           </p>
           <div className="drawer-statuses">
             <Status value={record.verification} />
-            {record.kind === 'equipo' && <UsageStatus value={equipmentUsage(record)} />}
+            {(record.kind === 'equipo' || record.kind === 'componente_telefono') && (
+              <UsageStatus value={equipmentUsage(record)} />
+            )}
           </div>
           <div className="drawer-section">
-            <h3>Información general</h3>
+            <h3>{t('Información general')}</h3>
             <dl>
               <div>
-                <dt>Sede</dt>
+                <dt>{t('Sede')}</dt>
                 <dd>{record.site}</dd>
               </div>
               <div>
-                <dt>Ubicación</dt>
-                <dd>{record.location || 'Por confirmar'}</dd>
+                <dt>{t('Ubicación')}</dt>
+                <dd>{record.location || t('Por confirmar')}</dd>
               </div>
               <div>
-                <dt>Creado</dt>
-                <dd>{date(record.createdAt)}</dd>
+                <dt>{t('Creado')}</dt>
+                <dd>{date(record.createdAt, dateLocale)}</dd>
               </div>
               <div>
-                <dt>Actualizado</dt>
-                <dd>{date(record.updatedAt)}</dd>
+                <dt>{t('Actualizado')}</dt>
+                <dd>{date(record.updatedAt, dateLocale)}</dd>
               </div>
             </dl>
           </div>
           <div className="drawer-section">
-            <h3>Datos documentados</h3>
+            <h3>{t('Datos documentados')}</h3>
             <dl>
               {template.fields.map((f) => (
                 <div key={f.key}>
-                  <dt>{f.label}</dt>
+                  <dt>{t(f.label)}</dt>
                   <dd className={f.type === 'textarea' ? 'multiline' : ''}>
                     {record.payload[f.key]
                       ? f.type === 'record'
                         ? resolve(record.payload[f.key])
-                        : record.payload[f.key]
-                      : 'Por confirmar'}
+                        : f.type === 'select'
+                          ? t(record.payload[f.key])
+                          : record.payload[f.key]
+                      : t('Por confirmar')}
                   </dd>
                 </div>
               ))}
             </dl>
           </div>
+          {record.kind === 'equipo' && record.payload.tipo === 'telefono_ip' && (
+            <div className="drawer-section">
+              <h3>{t('Componentes conectados')}</h3>
+              <div className="phone-components">
+                {all.filter((item) => item.kind === 'componente_telefono' && item.payload.telefono === record.id).length ? (
+                  all
+                    .filter((item) => item.kind === 'componente_telefono' && item.payload.telefono === record.id)
+                    .map((item) => (
+                      <div className="phone-component" key={item.id}>
+                        <Headphones size={17} />
+                        <span><strong>{item.name}</strong><small>{t(item.payload.tipo || 'Componente de teléfono IP')} · {t(equipmentUsage(item))}</small></span>
+                      </div>
+                    ))
+                ) : <p className="phone-components-empty">{t('Todavía no hay componentes vinculados a este teléfono.')}</p>}
+              </div>
+            </div>
+          )}
         </div>
         <div className="drawer-footer">
+          {record.kind === 'equipo' && record.payload.tipo === 'telefono_ip' && (
+            <button className="button button-secondary" onClick={onVault}>
+              <LockKeyhole size={16} />
+              {t('Abrir credenciales del teléfono')}
+            </button>
+          )}
           <button className="button button-primary" onClick={onEdit}>
             <Pencil size={16} />
-            Editar registro
+            {t('Editar registro')}
           </button>
           <button className="button button-danger" onClick={onDelete}>
             <Trash2 size={16} />
-            Eliminar
+            {t('Eliminar')}
           </button>
         </div>
       </aside>
@@ -2020,6 +2101,7 @@ function RecordForm({
   onCancel: () => void;
   onSave: (value: Omit<RecordItem, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
 }) {
+  const { t } = useI18n();
   const [name, setName] = useState(record?.name ?? '');
   const [site, setSite] = useState<Site>(record?.site ?? initialSite);
   const [location, setLocation] = useState(record?.location ?? '');
@@ -2036,7 +2118,9 @@ function RecordForm({
           : template.kind === 'pendiente'
             ? { tipo: 'Pendiente', prioridad: 'Media' }
             : {});
-    return template.kind === 'equipo' ? { estadoUso: 'Por confirmar', ...initial } : initial;
+    return template.kind === 'equipo' || template.kind === 'componente_telefono'
+      ? { estadoUso: 'Por confirmar', ...initial }
+      : initial;
   });
   const setField = (key: string, value: string) => setPayload((p) => ({ ...p, [key]: value }));
   function fillWeeklyDraft() {
@@ -2045,7 +2129,7 @@ function RecordForm({
     end.setDate(end.getDate() + 7);
     const inWeek = (r: RecordItem) =>
       r.site === site && r.createdAt >= `${start}T00:00:00` && new Date(r.createdAt) < end;
-    const equipment = all.filter((r) => r.kind === 'equipo' && inWeek(r));
+    const equipment = all.filter((r) => (r.kind === 'equipo' || r.kind === 'componente_telefono') && inWeek(r));
     const cables = all.filter((r) => r.kind === 'cable' && inWeek(r));
     const tests = all.filter((r) => r.kind === 'prueba' && inWeek(r));
     setPayload((p) => ({
@@ -2074,18 +2158,18 @@ function RecordForm({
         className="form-modal modal"
         role="dialog"
         aria-modal="true"
-        aria-label={record ? `Editar ${record.name}` : `Crear ${template.title}`}
+        aria-label={record ? `${t('Editar registro')}: ${record.name}` : `${t('Crear registro')}: ${t(template.title)}`}
       >
         <form onSubmit={(e) => void submit(e)}>
           <div className="modal-head">
             <div>
               <span className="section-kicker">
-                {record ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO'} · {template.title.toUpperCase()}
+                {t(record ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO')} · {t(template.title).toUpperCase()}
               </span>
-              <h2>{record ? 'Actualizar información' : `Documentar ${formTitle(template)}`}</h2>
-              <p>{template.description}</p>
+              <h2>{record ? t('Actualizar información') : `${t('Documentar')} ${t(template.title)}`}</h2>
+              <p>{t(template.description)}</p>
             </div>
-            <button type="button" className="icon-button" onClick={onCancel} aria-label="Cerrar">
+            <button type="button" className="icon-button" onClick={onCancel} aria-label={t('Cerrar')}>
               <X size={20} />
             </button>
           </div>
@@ -2093,14 +2177,14 @@ function RecordForm({
             <div className="form-tip">
               <ShieldCheck size={17} />
               <span>
-                Registra datos técnicos y de ubicación. No incluyas contraseñas, tokens ni claves.
+                {t('Registra datos técnicos y de ubicación. Guarda usuarios y contraseñas solo en la bóveda cifrada.')}
               </span>
             </div>
-            <div className="form-section-title">Identificación</div>
+            <div className="form-section-title">{t('Identificación')}</div>
             <div className="form-grid">
               <label className="field span-2">
                 <span>
-                  Nombre o identificador <em>*</em>
+                  {t('Nombre o identificador')} <em>*</em>
                 </span>
                 <input
                   autoFocus
@@ -2111,18 +2195,18 @@ function RecordForm({
                   onChange={(e) => setName(e.target.value)}
                   placeholder={
                     template.kind === 'equipo'
-                      ? `Ej. ${template.title} COL-01`
+                      ? `${t('Ej.')} ${t(template.title)} COL-01`
                       : template.kind === 'cable'
-                        ? 'Ej. CBL-COL-001'
+                        ? `${t('Ej.')} CBL-COL-001`
                         : template.kind === 'reporte'
-                          ? 'Ej. Avance semanal de red'
-                          : 'Ej. Identificador del registro'
+                          ? t('Ej. Avance semanal de red')
+                          : t('Ej. Identificador del registro')
                   }
                 />
               </label>
               <label className="field">
                 <span>
-                  Sede <em>*</em>
+                  {t('Sede')} <em>*</em>
                 </span>
                 <select value={site} onChange={(e) => setSite(e.target.value as Site)}>
                   {SITES.map((s) => (
@@ -2131,35 +2215,35 @@ function RecordForm({
                 </select>
               </label>
               <label className="field">
-                <span>Ubicación específica</span>
+                <span>{t('Ubicación específica')}</span>
                 <input
                   maxLength={160}
                   value={location}
                   onChange={(e) => setLocation(e.target.value)}
-                  placeholder="Edificio, piso, sala…"
+                  placeholder={t('Edificio, piso, sala…')}
                 />
               </label>
               <label className="field span-2">
                 <span>
-                  Estado de verificación <em>*</em>
+                  {t('Estado de verificación')} <em>*</em>
                 </span>
                 <select
                   value={verification}
                   onChange={(e) => setVerification(e.target.value as Verification)}
                 >
-                  <option value="por_confirmar">Por confirmar</option>
-                  <option value="pendiente">Pendiente</option>
-                  <option value="verificado">Verificado</option>
+                  <option value="por_confirmar">{t('Por confirmar')}</option>
+                  <option value="pendiente">{t('Pendiente')}</option>
+                  <option value="verificado">{t('Verificado')}</option>
                 </select>
               </label>
             </div>
             <div className="form-section-title">
-              {template.kind === 'reporte' ? 'Contenido del reporte' : 'Datos técnicos'}
+              {t(template.kind === 'reporte' ? 'Contenido del reporte' : 'Datos técnicos')}
             </div>
             {template.kind === 'reporte' && (
               <button type="button" className="draft-button" onClick={fillWeeklyDraft}>
                 <Zap size={16} />
-                Rellenar borrador con registros de esta semana
+                {t('Rellenar borrador con registros de esta semana')}
               </button>
             )}
             <div className="form-grid">
@@ -2171,7 +2255,13 @@ function RecordForm({
                         .filter(
                           (r) =>
                             r.kind === field.recordKind &&
-                            (field.key === 'switch' ? r.payload.tipo === 'switch' : true),
+                            (field.key === 'switch'
+                              ? r.payload.tipo === 'switch'
+                              : field.key === 'telefono'
+                                ? r.payload.tipo === 'telefono_ip'
+                                : field.key === 'computadora'
+                                  ? r.payload.tipo === 'computadora' || r.payload.tipo === 'laptop'
+                                  : true),
                         )
                         .filter(
                           (r) =>
@@ -2184,7 +2274,7 @@ function RecordForm({
                     key={field.key}
                   >
                     <span>
-                      {field.label} {field.required && <em>*</em>}
+                      {t(field.label)} {field.required && <em>*</em>}
                     </span>
                     {field.type === 'textarea' ? (
                       <textarea
@@ -2193,7 +2283,7 @@ function RecordForm({
                         rows={4}
                         value={value}
                         onChange={(e) => setField(field.key, e.target.value)}
-                        placeholder={field.placeholder || 'Escribe aquí…'}
+                        placeholder={t(field.placeholder || 'Escribe aquí…')}
                       />
                     ) : field.type === 'select' ? (
                       <select
@@ -2201,9 +2291,9 @@ function RecordForm({
                         value={value}
                         onChange={(e) => setField(field.key, e.target.value)}
                       >
-                        <option value="">Seleccionar…</option>
+                        <option value="">{t('Seleccionar…')}</option>
                         {field.options?.map((o) => (
-                          <option key={o}>{o}</option>
+                          <option key={o} value={o}>{t(o)}</option>
                         ))}
                       </select>
                     ) : field.type === 'record' ? (
@@ -2212,7 +2302,7 @@ function RecordForm({
                         value={value}
                         onChange={(e) => setField(field.key, e.target.value)}
                       >
-                        <option value="">Seleccionar registro…</option>
+                        <option value="">{t('Seleccionar registro…')}</option>
                         {options.map((r) => (
                           <option value={r.id} key={r.id}>
                             {r.name} · {r.site}
@@ -2243,11 +2333,11 @@ function RecordForm({
           </div>
           <div className="form-footer">
             <button type="button" className="button button-secondary" onClick={onCancel}>
-              Cancelar
+              {t('Cancelar')}
             </button>
             <button className="button button-primary" type="submit" disabled={busy}>
               {busy ? <span className="spinner small" /> : <Check size={16} />}{' '}
-              {busy ? 'Guardando…' : record ? 'Guardar cambios' : 'Crear registro'}
+              {t(busy ? 'Guardando…' : record ? 'Guardar cambios' : 'Crear registro')}
             </button>
           </div>
         </form>

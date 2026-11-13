@@ -54,9 +54,18 @@ npm run build
 
 La primera ejecución crea `data/network.sqlite` dentro del proyecto. Git ignora esa carpeta, así que los datos locales no se suben al repositorio. `npm run seed:demo` no modifica una base que ya tiene registros.
 
+## Idiomas y credenciales
+
+En la barra superior puedes elegir **Español**, **English** o **Português**. La elección se conserva en el navegador.
+
+Para guardar un usuario o contraseña, entra en **Bóveda segura**, crea una frase maestra de al menos 14 caracteres y añade una credencial. Puedes vincularla a un teléfono IP u otro equipo. La aplicación cifra la credencial antes de enviarla al servidor local. Descarga un **respaldo cifrado** desde la misma pantalla y guarda el archivo y la frase maestra en lugares seguros. Para restaurarlo en otra instalación, abre la bóveda vacía, elige **Restaurar un respaldo** y escribe la frase usada para crearlo.
+
+Si ya hay una bóveda, desbloquéala y usa **Integrar un respaldo cifrado** para añadir credenciales faltantes. Este archivo respalda las credenciales, no los registros del inventario. Para trasladar todo el inventario local, copia `data/network.sqlite` con la aplicación detenida. Consulta [SEGURIDAD.md](docs/SEGURIDAD.md).
+
 ## Problemas comunes
 
 - **`node` no se reconoce:** instala Node.js y abre una terminal nueva.
 - **El puerto 3000 está ocupado:** detén la otra aplicación que lo usa o ejecuta `npm run dev -- --port 3001` y abre el puerto indicado.
 - **El inventario aparece vacío:** la base es nueva. Ejecuta `npm run seed:demo` con el servidor detenido o crea registros desde la interfaz.
 - **No puedes abrirla desde otro equipo:** esta adaptación funciona en la computadora donde se ejecuta. La versión privada de Sites sigue alojada en la nube.
+- **Olvidaste la frase maestra:** la aplicación no puede recuperarla. Necesitas la frase original para abrir la bóveda o el respaldo cifrado.
