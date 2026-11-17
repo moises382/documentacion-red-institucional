@@ -66,7 +66,7 @@ La bóveda se crea o abre con una frase maestra. Su pantalla permite añadir acc
 
 La ficha `PBX-DEMO-COL-01` documenta una central física de ejemplo. Incluye marca y modelo, IP de gestión, VLAN de voz, rango y capacidad de extensiones, proveedor y referencias de troncales SIP, puertos FXO/FXS, rack, respaldo de configuración y responsable. La plantilla también permite registrar rutas de llamadas, IVR, colas, horarios, grabación y plan de contingencia. Debajo aparecen los teléfonos IP vinculados con su extensión y estado de uso. El visor de topología también dibuja la relación de telefonía IP.
 
-**Abrir credenciales de la central** lleva a la bóveda cifrada. Allí se crea una entrada vinculada a esta PBX para cada acceso: administración, troncal SIP o SSH, con usuario, contraseña, dirección y notas privadas. El archivo de respaldo de la bóveda sigue cifrado. La ficha técnica guarda solo la referencia del respaldo de configuración de la PBX, sin claves ni archivo privado.
+Después de guardar una central nueva se abre su ficha. **Abrir credenciales de la central** lleva a la bóveda cifrada. Allí se crea una entrada vinculada a esta PBX para cada acceso: administración, troncal SIP o SSH, con usuario, contraseña, dirección y notas privadas. El archivo de respaldo de la bóveda sigue cifrado. La ficha técnica guarda solo la referencia del respaldo de configuración de la PBX, sin claves ni archivo privado.
 
 ## Cómo recorrer la demostración
 

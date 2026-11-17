@@ -46,7 +46,7 @@ Los usuarios y contraseñas van en una **bóveda separada del inventario**. Se c
 
 ### Central telefónica / PBX
 
-La plantilla de central telefónica reúne la identificación del conmutador, IP y VLAN de voz, extensiones, troncales SIP, puertos FXO y FXS, rutas de llamadas, IVR, grabación, rack, UPS y continuidad. Cada teléfono IP puede vincularse a la central. El botón de credenciales abre la bóveda cifrada para guardar por separado el usuario y la contraseña de administración, de la troncal SIP u otros accesos.
+La plantilla de central telefónica reúne la identificación del conmutador, IP y VLAN de voz, extensiones, troncales SIP, puertos FXO y FXS, rutas de llamadas, IVR, grabación, rack, UPS y continuidad. Cada teléfono IP puede vincularse a la central. Al guardar una central nueva se abre su ficha, desde donde el botón de credenciales lleva a la bóveda cifrada para guardar por separado el usuario y la contraseña de administración, de la troncal SIP u otros accesos.
 
 Consulta la [galería completa con explicación de las ocho pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
 

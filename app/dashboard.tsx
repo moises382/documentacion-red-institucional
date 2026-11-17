@@ -466,13 +466,13 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
         headers: { 'content-type': 'application/json' },
         body: JSON.stringify(body),
       });
-      const result = (await response.json()) as { error?: string };
+      const result = (await response.json()) as { error?: string; id?: string };
       if (!response.ok) throw new Error(result.error ?? 'No se pudo guardar.');
       await reload();
       setToast(success);
       setModal(null);
       if (body.action === 'delete') setSelectedId(null);
-      return true;
+      return result.id ?? true;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo guardar.');
       return false;
@@ -1631,7 +1631,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           busy={busy}
           onCancel={() => setModal(null)}
           onSave={async (value) => {
-            await mutate(
+            const savedId = await mutate(
               {
                 action: modal.record ? 'update' : 'create',
                 id: modal.record?.id,
@@ -1640,6 +1640,12 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
               },
               modal.record ? 'Registro actualizado' : 'Registro creado',
             );
+            if (
+              !modal.record &&
+              modal.template.id === 'central_telefonica' &&
+              typeof savedId === 'string'
+            )
+              setSelectedId(savedId);
           }}
         />
       )}
