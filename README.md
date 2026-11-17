@@ -6,7 +6,7 @@ Repositorio público: [moises382/documentacion-red-institucional](https://github
 
 ## Así se ve el proyecto
 
-Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real.
+Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real. Se tomaron antes de incorporar la plantilla de central telefónica, que se describe más abajo.
 
 ### Resumen del proyecto
 
@@ -44,12 +44,17 @@ La ficha del teléfono conecta la extensión, dirección MAC, servidor de telefo
 
 Los usuarios y contraseñas van en una **bóveda separada del inventario**. Se cifra en el navegador con una frase maestra; permite descargar e importar respaldos cifrados. La imagen muestra la bóveda vacía, sin secretos de demostración.
 
+### Central telefónica / PBX
+
+La plantilla de central telefónica reúne la identificación del conmutador, IP y VLAN de voz, extensiones, troncales SIP, puertos FXO y FXS, rutas de llamadas, IVR, grabación, rack, UPS y continuidad. Cada teléfono IP puede vincularse a la central. El botón de credenciales abre la bóveda cifrada para guardar por separado el usuario y la contraseña de administración, de la troncal SIP u otros accesos.
+
 Consulta la [galería completa con explicación de las ocho pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
 
 ## Funciones
 
 - Inventario editable de equipos, direcciones IP, puertos, VLANs, etiquetas de nodos y cables, racks, patch panels, enlaces troncales y dispositivos PoE.
-- Plantillas reutilizables para switches, computadoras, laptops, impresoras, puntos de acceso, teléfonos IP, servidores, routers, firewalls, cámaras IP, UPS y NAS.
+- Plantillas reutilizables para switches, computadoras, laptops, impresoras, puntos de acceso, teléfonos IP, centrales telefónicas / PBX, servidores, routers, firewalls, cámaras IP, UPS y NAS.
+- Ficha de central telefónica IP, virtual o digital con capacidad, extensiones, troncales SIP, puertos, rutas entrantes y salientes, IVR, colas, grabación, ubicación y respaldo de configuración; vínculo a teléfonos IP y accesos resguardados en la bóveda.
 - Fichas de componentes de teléfono IP: auriculares, diademas, módulos de expansión, fuentes, inyectores PoE y cables, vinculadas al teléfono.
 - Estado de uso de equipos y componentes independiente de la verificación: **activo**, **inactivo**, **no utilizado** o **por confirmar**, con motivo y filtro en el inventario.
 - Diagrama de topología generado a partir de equipos y conexiones documentadas.

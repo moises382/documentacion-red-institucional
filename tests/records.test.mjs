@@ -95,7 +95,12 @@ test('teléfonos IP y componentes tienen vínculos y estados documentables', () 
     ...switchRecord,
     kind: 'componente_telefono',
     name: 'DIADEMA-DEMO-01',
-    payload: { telefono: 'telefono-1', tipo: 'Diadema', conexion: 'RJ9', estadoUso: 'No utilizado' },
+    payload: {
+      telefono: 'telefono-1',
+      tipo: 'Diadema',
+      conexion: 'RJ9',
+      estadoUso: 'No utilizado',
+    },
   });
   assert.equal(component.message, undefined);
   const invalid = validateRecord({
@@ -105,6 +110,39 @@ test('teléfonos IP y componentes tienen vínculos y estados documentables', () 
     payload: { telefono: 'telefono-1', tipo: 'Diadema', password: 'secreto' },
   });
   assert.equal(invalid.value, undefined);
+});
+
+test('documenta una central telefónica, su vínculo con teléfonos y rechaza claves en el inventario', () => {
+  const pbx = validateRecord({
+    ...switchRecord,
+    name: 'PBX-DEMO-01',
+    payload: {
+      tipo: 'central_telefonica',
+      modalidad: 'PBX IP física',
+      marca: 'Marca de ejemplo',
+      ipGestion: '192.0.2.80',
+      rangoExtensiones: '1000-1099',
+      puertosFXO: '2',
+      estadoUso: 'Activo',
+      respaldoUbicacion: 'Archivo de respaldo sin secretos',
+    },
+  });
+  assert.equal(pbx.message, undefined);
+  assert.equal(pbx.value?.payload.rangoExtensiones, '1000-1099');
+  const phone = validateRecord({
+    ...switchRecord,
+    name: 'TEL-DEMO-01',
+    payload: { tipo: 'telefono_ip', extension: '1001', centralTelefonica: 'demo-pbx-col' },
+  });
+  assert.equal(phone.message, undefined);
+  assert.equal(phone.value?.payload.centralTelefonica, 'demo-pbx-col');
+  const invalid = validateRecord({
+    ...switchRecord,
+    name: 'PBX-DEMO-01',
+    payload: { tipo: 'central_telefonica', password: 'solo-en-boveda' },
+  });
+  assert.equal(invalid.value, undefined);
+  assert.match(invalid.message, /campo no válido/);
 });
 
 test('el historial describe los campos modificados', () => {

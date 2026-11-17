@@ -1,6 +1,6 @@
 # Galería y recorrido del proyecto
 
-Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real.
+Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real. Las ocho capturas se tomaron antes de añadir la plantilla de central telefónica; esa ampliación se explica al final y se verificó visualmente con los nuevos datos de ejemplo.
 
 ## 1. Resumen: estado general del trabajo
 
@@ -46,7 +46,7 @@ Cada reporte tiene sede y estado de verificación, queda registrado en el histor
 
 ![Galería de plantillas para equipos e infraestructura](capturas/06-plantillas.jpg)
 
-La pantalla de plantillas ofrece formularios adaptados a **12 tipos de equipo**, entre ellos switch, computadora de escritorio, laptop, impresora, punto de acceso, teléfono IP, servidor, router, firewall, cámara IP, UPS y NAS. Cada tipo pide los datos pertinentes; por ejemplo, la computadora tiene inventario, sistema operativo y área usuaria, mientras que el switch permite registrar puertos y gestión.
+La pantalla de plantillas ofrece formularios adaptados a **13 tipos de equipo**, entre ellos switch, computadora de escritorio, laptop, impresora, punto de acceso, teléfono IP, central telefónica / PBX, servidor, router, firewall, cámara IP, UPS y NAS. Cada tipo pide los datos pertinentes; por ejemplo, la computadora tiene inventario, sistema operativo y área usuaria, mientras que el switch permite registrar puertos y gestión.
 
 Hay otras **13 plantillas** para infraestructura y seguimiento: componente de teléfono IP, IP, puerto, VLAN, nodo, cable, rack, patch panel, enlace troncal, PoE, pendiente, prueba y reporte. Al pulsar **Usar plantilla** se abre un formulario editable. El registro se crea al guardar el formulario, y después puede consultarse o actualizarse desde su sección correspondiente.
 
@@ -54,13 +54,19 @@ Hay otras **13 plantillas** para infraestructura y seguimiento: componente de te
 
 ![Detalle de un teléfono IP ficticio con componentes vinculados](capturas/07-telefono-componentes.jpg)
 
-La ficha de `TEL-DEMO-COL-02` reúne extensión, dirección MAC, IP, servidor de telefonía, puerto, etiqueta de cable, nodo, dispositivo PoE y computadora conectada al puerto PC. Las diademas, auriculares, módulos de expansión y fuentes pueden tener una ficha propia vinculada al teléfono. En la imagen se muestran una diadema activa y un adaptador que está en reserva: su estado de uso se sigue por separado del teléfono. El botón **Abrir credenciales del teléfono** lleva a la bóveda; la ficha técnica no contiene la contraseña.
+La ficha de `TEL-DEMO-COL-02` reúne extensión, dirección MAC, IP, central telefónica vinculada, puerto, etiqueta de cable, nodo, dispositivo PoE y computadora conectada al puerto PC. Las diademas, auriculares, módulos de expansión y fuentes pueden tener una ficha propia vinculada al teléfono. En la imagen se muestran una diadema activa y un adaptador que está en reserva: su estado de uso se sigue por separado del teléfono. El botón **Abrir credenciales del teléfono** lleva a la bóveda; la ficha técnica no contiene la contraseña.
 
 ## 8. Bóveda: credenciales y respaldo cifrado
 
 ![Pantalla inicial de la bóveda cifrada sin usuarios ni contraseñas reales](capturas/08-boveda.jpg)
 
 La bóveda se crea o abre con una frase maestra. Su pantalla permite añadir accesos vinculados a equipos, bloquear la sesión y descargar un respaldo cifrado. La captura muestra únicamente el estado inicial vacío. La clave maestra no se guarda ni se envía al servidor; si se pierde, tampoco puede abrirse un respaldo. Consulta [SEGURIDAD.md](SEGURIDAD.md) antes de guardar datos propios.
+
+## Actualización: central telefónica y planta de telefonía
+
+La ficha `PBX-DEMO-COL-01` documenta una central física de ejemplo. Incluye marca y modelo, IP de gestión, VLAN de voz, rango y capacidad de extensiones, proveedor y referencias de troncales SIP, puertos FXO/FXS, rack, respaldo de configuración y responsable. La plantilla también permite registrar rutas de llamadas, IVR, colas, horarios, grabación y plan de contingencia. Debajo aparecen los teléfonos IP vinculados con su extensión y estado de uso. El visor de topología también dibuja la relación de telefonía IP.
+
+**Abrir credenciales de la central** lleva a la bóveda cifrada. Allí se crea una entrada vinculada a esta PBX para cada acceso: administración, troncal SIP o SSH, con usuario, contraseña, dirección y notas privadas. El archivo de respaldo de la bóveda sigue cifrado. La ficha técnica guarda solo la referencia del respaldo de configuración de la PBX, sin claves ni archivo privado.
 
 ## Cómo recorrer la demostración
 

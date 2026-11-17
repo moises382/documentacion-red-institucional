@@ -1,6 +1,14 @@
 'use client';
 
-import { useCallback, useEffect, useMemo, useState, type FormEvent, type ReactNode } from 'react';
+import {
+  Fragment,
+  useCallback,
+  useEffect,
+  useMemo,
+  useState,
+  type FormEvent,
+  type ReactNode,
+} from 'react';
 import {
   Activity,
   AlertCircle,
@@ -35,6 +43,7 @@ import {
   PanelTop,
   Pencil,
   Phone,
+  PhoneCall,
   Plus,
   Printer,
   Router,
@@ -94,6 +103,7 @@ const iconMap: Record<string, LucideIcon> = {
   Printer,
   Wifi,
   Phone,
+  PhoneCall,
   Server,
   Hash,
   Cable,
@@ -138,6 +148,7 @@ const equipmentCode: Record<string, string> = {
   impresora: 'PR',
   punto_acceso: 'AP',
   telefono_ip: 'IP',
+  central_telefonica: 'PBX',
   servidor: 'SV',
   router: 'RT',
   firewall: 'FW',
@@ -151,12 +162,18 @@ function parseDate(value: string) {
 function date(value?: string, locale = 'es-MX') {
   if (!value) return '—';
   const d = parseDate(value);
-  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' }).format(d);
+  return Number.isNaN(d.getTime())
+    ? value
+    : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short', year: 'numeric' }).format(
+        d,
+      );
 }
 function shortDate(value?: string, locale = 'es-MX') {
   if (!value) return '—';
   const d = parseDate(value);
-  return Number.isNaN(d.getTime()) ? value : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short' }).format(d);
+  return Number.isNaN(d.getTime())
+    ? value
+    : new Intl.DateTimeFormat(locale, { day: '2-digit', month: 'short' }).format(d);
 }
 function weekStart() {
   const d = new Date();
@@ -260,7 +277,13 @@ function Empty({
   );
 }
 
-export default function Dashboard({ displayName, hosted = false }: { displayName: string; hosted?: boolean }) {
+export default function Dashboard({
+  displayName,
+  hosted = false,
+}: {
+  displayName: string;
+  hosted?: boolean;
+}) {
   return (
     <LanguageProvider>
       <DashboardContent displayName={displayName} hosted={hosted} />
@@ -325,9 +348,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     [changes, site],
   );
   const equipment = scoped.filter((r) => r.kind === 'equipo');
-  const usableItems = scoped.filter(
-    (r) => r.kind === 'equipo' || r.kind === 'componente_telefono',
-  );
+  const usableItems = scoped.filter((r) => r.kind === 'equipo' || r.kind === 'componente_telefono');
   const usageCounts = Object.fromEntries(
     EQUIPMENT_STATES.map((state) => [
       state,
@@ -494,9 +515,12 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     URL.revokeObjectURL(url);
   }
   const siteTitle = site === 'Todas las sedes' ? t('Todas las sedes').toLowerCase() : site;
-  const firstName = displayName === 'Proyecto' ? t('Proyecto') : displayName.includes('@')
-    ? displayName.split('@')[0]
-    : displayName.split(' ')[0];
+  const firstName =
+    displayName === 'Proyecto'
+      ? t('Proyecto')
+      : displayName.includes('@')
+        ? displayName.split('@')[0]
+        : displayName.split(' ')[0];
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileMenu ? 'sidebar-open' : ''}`}>
@@ -535,7 +559,13 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           <ShieldCheck size={17} />
           <div>
             <strong>{t(hosted ? 'Espacio privado' : 'Datos locales')}</strong>
-            <span>{t(hosted ? 'Acceso privado. Las claves van en la bóveda cifrada.' : 'La demo usa SQLite en tu equipo. Las claves van en la bóveda cifrada.')}</span>
+            <span>
+              {t(
+                hosted
+                  ? 'Acceso privado. Las claves van en la bóveda cifrada.'
+                  : 'La demo usa SQLite en tu equipo. Las claves van en la bóveda cifrada.',
+              )}
+            </span>
           </div>
         </div>
         <div className="user-card">
@@ -635,14 +665,21 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                     <div className="hero-copy">
                       <span className="eyebrow">
                         <span className="live-dot" />
-                        {t(hosted ? 'PROYECTO ACTIVO' : 'PROYECTO PERSONAL')} · {siteTitle.toUpperCase()}
+                        {t(hosted ? 'PROYECTO ACTIVO' : 'PROYECTO PERSONAL')} ·{' '}
+                        {siteTitle.toUpperCase()}
                       </span>
                       <h1>
                         {t('Tu red, documentada')}
                         <br />
                         <em>{t('con claridad.')}</em>
                       </h1>
-                      <p>{t(hosted ? 'Inventario, cableado y seguimiento en un solo lugar. Retoma el trabajo desde cualquier equipo autorizado.' : 'Inventario, verificación y seguimiento en un solo lugar. Esta versión guarda los datos en tu equipo.')}</p>
+                      <p>
+                        {t(
+                          hosted
+                            ? 'Inventario, cableado y seguimiento en un solo lugar. Retoma el trabajo desde cualquier equipo autorizado.'
+                            : 'Inventario, verificación y seguimiento en un solo lugar. Esta versión guarda los datos en tu equipo.',
+                        )}
+                      </p>
                       <div className="hero-actions">
                         <button
                           className="button button-light"
@@ -746,8 +783,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                         <span className="large-percent">{percentage}%</span>
                       </div>
                       <p>
-                        {documentable.filter((r) => r.verification === 'verificado').length} {t('de')}{' '}
-                        {documentable.length} {t('registros de inventario verificados.')}
+                        {documentable.filter((r) => r.verification === 'verificado').length}{' '}
+                        {t('de')} {documentable.length} {t('registros de inventario verificados.')}
                       </p>
                       <div className="progress-track">
                         <span style={{ width: `${percentage}%` }} />
@@ -866,18 +903,20 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                         </button>
                       </div>
                       <div className="quick-templates">
-                        {TEMPLATES.filter((template) => quickEquipment.has(template.id)).map((template) => {
-                          const I = iconMap[template.icon];
-                          return (
-                            <button key={template.id} onClick={() => openNew(template)}>
-                              <span className="quick-icon">
-                                <I size={20} />
-                              </span>
-                              <strong>{t(template.title)}</strong>
-                              <Plus size={16} />
-                            </button>
-                          );
-                        })}
+                        {TEMPLATES.filter((template) => quickEquipment.has(template.id)).map(
+                          (template) => {
+                            const I = iconMap[template.icon];
+                            return (
+                              <button key={template.id} onClick={() => openNew(template)}>
+                                <span className="quick-icon">
+                                  <I size={20} />
+                                </span>
+                                <strong>{t(template.title)}</strong>
+                                <Plus size={16} />
+                              </button>
+                            );
+                          },
+                        )}
                       </div>
                     </div>
                     <div className="card activity-card">
@@ -933,7 +972,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                   <div className="inventory-summary">
                     <span>
                       <Boxes size={17} />
-                      {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} {t('registros')}
+                      {scoped.filter((r) => inventoryKinds.includes(r.kind)).length}{' '}
+                      {t('registros')}
                     </span>
                     <span>
                       <CheckCircle2 size={17} />
@@ -1082,7 +1122,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                                   <td>
                                     <Status value={r.verification} />
                                   </td>
-                                  <td className="date-cell">{shortDate(r.updatedAt, dateLocale)}</td>
+                                  <td className="date-cell">
+                                    {shortDate(r.updatedAt, dateLocale)}
+                                  </td>
                                   <td>
                                     <button
                                       className="row-action"
@@ -1102,7 +1144,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                     {filteredInventory.length > 0 && (
                       <div className="table-footer">
                         {t('Mostrando')} {filteredInventory.length} {t('de')}{' '}
-                        {scoped.filter((r) => inventoryKinds.includes(r.kind)).length} {t('registros')}
+                        {scoped.filter((r) => inventoryKinds.includes(r.kind)).length}{' '}
+                        {t('registros')}
                       </div>
                     )}
                   </div>
@@ -1133,6 +1176,10 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                       <span>
                         <i className="line-swatch dashed" />
                         {t('Puerto de switch')}
+                      </span>
+                      <span>
+                        <i className="line-swatch telefonia" />
+                        {t('Telefonía IP')}
                       </span>
                       <span>
                         <i className="legend-dot green" />
@@ -1363,7 +1410,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                     <div>
                       <strong>{t('Una bitácora útil para tomar decisiones')}</strong>
                       <span>
-                        {t('Cada creación y edición de reporte aparece en el historial de cambios.')}
+                        {t(
+                          'Cada creación y edición de reporte aparece en el historial de cambios.',
+                        )}
                       </span>
                     </div>
                   </div>
@@ -1415,7 +1464,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                               </span>
                             </div>
                             <div className="report-actions">
-                              <button onClick={() => setSelectedId(r.id)}>{t('Ver detalle')}</button>
+                              <button onClick={() => setSelectedId(r.id)}>
+                                {t('Ver detalle')}
+                              </button>
                               <button onClick={() => downloadReport(r)}>
                                 <ArrowDownToLine size={15} />
                                 {t('Descargar')}
@@ -1443,7 +1494,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                   ) : (
                     <div className="history-card card">
                       <div className="history-head">
-                        <strong>{visibleChanges.length} {t('cambios recientes')}</strong>
+                        <strong>
+                          {visibleChanges.length} {t('cambios recientes')}
+                        </strong>
                         <span>{t('Se muestran los 500 más recientes del proyecto')}</span>
                       </div>
                       {visibleChanges.map((c) => (
@@ -1482,7 +1535,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                   />
                   <div className="template-heading">
                     <h3>{t('Equipos')}</h3>
-                    <span>{TEMPLATES.filter((item) => item.kind === 'equipo').length} {t('plantillas')}</span>
+                    <span>
+                      {TEMPLATES.filter((item) => item.kind === 'equipo').length} {t('plantillas')}
+                    </span>
                   </div>
                   <div className="template-grid">
                     {TEMPLATES.filter((t) => t.kind === 'equipo').map((t) => (
@@ -1491,7 +1546,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                   </div>
                   <div className="template-heading">
                     <h3>{t('Infraestructura y seguimiento')}</h3>
-                    <span>{TEMPLATES.filter((item) => item.kind !== 'equipo').length} {t('plantillas')}</span>
+                    <span>
+                      {TEMPLATES.filter((item) => item.kind !== 'equipo').length} {t('plantillas')}
+                    </span>
                   </div>
                   <div className="template-grid">
                     {TEMPLATES.filter((t) => t.kind !== 'equipo').map((t) => (
@@ -1684,12 +1741,16 @@ function TopologyDiagram({
     ),
     nodes.filter(
       (r) =>
-        (r.kind === 'equipo' && ['servidor', 'nas'].includes(r.payload.tipo)) || r.kind === 'panel',
+        (r.kind === 'equipo' &&
+          ['servidor', 'nas', 'central_telefonica'].includes(r.payload.tipo)) ||
+        r.kind === 'panel',
     ),
     nodes.filter(
       (r) =>
         r.kind === 'equipo' &&
-        !['switch', 'router', 'firewall', 'servidor', 'nas'].includes(r.payload.tipo),
+        !['switch', 'router', 'firewall', 'servidor', 'nas', 'central_telefonica'].includes(
+          r.payload.tipo,
+        ),
     ),
   ];
   const positions = new Map<string, { x: number; y: number }>();
@@ -1702,7 +1763,7 @@ function TopologyDiagram({
     id: string;
     from: string;
     to: string;
-    type: 'troncal' | 'puerto' | 'nodo';
+    type: 'troncal' | 'puerto' | 'nodo' | 'telefonia';
     name: string;
   }[] = [];
   const linkName = (record: RecordItem) => {
@@ -1734,6 +1795,19 @@ function TopologyDiagram({
         type: 'nodo',
         name: r.name,
       });
+    if (
+      r.kind === 'equipo' &&
+      r.payload.tipo === 'telefono_ip' &&
+      positions.has(r.payload.centralTelefonica) &&
+      positions.has(r.id)
+    )
+      links.push({
+        id: `telefonia-${r.id}`,
+        from: r.payload.centralTelefonica,
+        to: r.id,
+        type: 'telefonia',
+        name: `${r.name} · ${t('Central telefónica vinculada')}`,
+      });
   }
   return (
     <div className="topology-card card">
@@ -1762,7 +1836,9 @@ function TopologyDiagram({
               <Wifi size={20} />
             </span>
           </div>
-          <h4>{t('Sin equipos documentados en')} {site}</h4>
+          <h4>
+            {t('Sin equipos documentados en')} {site}
+          </h4>
           <p>{t('Agrega equipos y sus conexiones para construir el diagrama automáticamente.')}</p>
           <button className="button button-secondary" onClick={onCreate}>
             <Plus size={16} />
@@ -1814,18 +1890,25 @@ function TopologyDiagram({
                   <g
                     key={link.id}
                     className="topology-link"
-                    onClick={() => onSelect(link.id)}
+                    onClick={() => onSelect(link.type === 'telefonia' ? link.to : link.id)}
                     role="button"
                     tabIndex={0}
                     onKeyDown={(e) => {
-                      if (e.key === 'Enter') onSelect(link.id);
+                      if (e.key === 'Enter')
+                        onSelect(link.type === 'telefonia' ? link.to : link.id);
                     }}
                   >
                     <title>{link.name}</title>
                     <path
                       d={path}
                       fill="none"
-                      stroke={link.type === 'troncal' ? '#327ba2' : '#8bb0c4'}
+                      stroke={
+                        link.type === 'troncal'
+                          ? '#327ba2'
+                          : link.type === 'telefonia'
+                            ? '#8b6ac7'
+                            : '#8bb0c4'
+                      }
                       strokeWidth={link.type === 'troncal' ? 2.5 : 1.8}
                       strokeDasharray={link.type === 'troncal' ? undefined : '6 5'}
                       markerEnd={`url(#arrow-${site})`}
@@ -1921,7 +2004,11 @@ function TopologyDiagram({
         </div>
       )}
       {(panels.length > 0 ||
-        records.some((r) => r.site === site && (r.kind === 'rack' || r.kind === 'cable' || r.kind === 'componente_telefono'))) && (
+        records.some(
+          (r) =>
+            r.site === site &&
+            (r.kind === 'rack' || r.kind === 'cable' || r.kind === 'componente_telefono'),
+        )) && (
         <div className="physical-strip">
           <strong>{t('Infraestructura física y cableado')}</strong>
           <div>
@@ -1929,7 +2016,10 @@ function TopologyDiagram({
               .filter(
                 (r) =>
                   r.site === site &&
-                  (r.kind === 'rack' || r.kind === 'panel' || r.kind === 'cable' || r.kind === 'componente_telefono'),
+                  (r.kind === 'rack' ||
+                    r.kind === 'panel' ||
+                    r.kind === 'cable' ||
+                    r.kind === 'componente_telefono'),
               )
               .map((r) => (
                 <button key={r.id} onClick={() => onSelect(r.id)}>
@@ -2049,16 +2139,69 @@ function DetailPanel({
             <div className="drawer-section">
               <h3>{t('Componentes conectados')}</h3>
               <div className="phone-components">
-                {all.filter((item) => item.kind === 'componente_telefono' && item.payload.telefono === record.id).length ? (
+                {all.filter(
+                  (item) =>
+                    item.kind === 'componente_telefono' && item.payload.telefono === record.id,
+                ).length ? (
                   all
-                    .filter((item) => item.kind === 'componente_telefono' && item.payload.telefono === record.id)
+                    .filter(
+                      (item) =>
+                        item.kind === 'componente_telefono' && item.payload.telefono === record.id,
+                    )
                     .map((item) => (
                       <div className="phone-component" key={item.id}>
                         <Headphones size={17} />
-                        <span><strong>{item.name}</strong><small>{t(item.payload.tipo || 'Componente de teléfono IP')} · {t(equipmentUsage(item))}</small></span>
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>
+                            {t(item.payload.tipo || 'Componente de teléfono IP')} ·{' '}
+                            {t(equipmentUsage(item))}
+                          </small>
+                        </span>
                       </div>
                     ))
-                ) : <p className="phone-components-empty">{t('Todavía no hay componentes vinculados a este teléfono.')}</p>}
+                ) : (
+                  <p className="phone-components-empty">
+                    {t('Todavía no hay componentes vinculados a este teléfono.')}
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
+          {record.kind === 'equipo' && record.payload.tipo === 'central_telefonica' && (
+            <div className="drawer-section">
+              <h3>{t('Teléfonos IP vinculados')}</h3>
+              <div className="phone-components">
+                {all.filter(
+                  (item) =>
+                    item.kind === 'equipo' &&
+                    item.payload.tipo === 'telefono_ip' &&
+                    item.payload.centralTelefonica === record.id,
+                ).length ? (
+                  all
+                    .filter(
+                      (item) =>
+                        item.kind === 'equipo' &&
+                        item.payload.tipo === 'telefono_ip' &&
+                        item.payload.centralTelefonica === record.id,
+                    )
+                    .map((item) => (
+                      <div className="phone-component" key={item.id}>
+                        <Phone size={17} />
+                        <span>
+                          <strong>{item.name}</strong>
+                          <small>
+                            {t('Extensión')}: {item.payload.extension || t('Por confirmar')} ·{' '}
+                            {t(equipmentUsage(item))}
+                          </small>
+                        </span>
+                      </div>
+                    ))
+                ) : (
+                  <p className="phone-components-empty">
+                    {t('Todavía no hay teléfonos vinculados a esta central.')}
+                  </p>
+                )}
               </div>
             </div>
           )}
@@ -2068,6 +2211,12 @@ function DetailPanel({
             <button className="button button-secondary" onClick={onVault}>
               <LockKeyhole size={16} />
               {t('Abrir credenciales del teléfono')}
+            </button>
+          )}
+          {record.kind === 'equipo' && record.payload.tipo === 'central_telefonica' && (
+            <button className="button button-secondary" onClick={onVault}>
+              <LockKeyhole size={16} />
+              {t('Abrir credenciales de la central')}
             </button>
           )}
           <button className="button button-primary" onClick={onEdit}>
@@ -2129,7 +2278,9 @@ function RecordForm({
     end.setDate(end.getDate() + 7);
     const inWeek = (r: RecordItem) =>
       r.site === site && r.createdAt >= `${start}T00:00:00` && new Date(r.createdAt) < end;
-    const equipment = all.filter((r) => (r.kind === 'equipo' || r.kind === 'componente_telefono') && inWeek(r));
+    const equipment = all.filter(
+      (r) => (r.kind === 'equipo' || r.kind === 'componente_telefono') && inWeek(r),
+    );
     const cables = all.filter((r) => r.kind === 'cable' && inWeek(r));
     const tests = all.filter((r) => r.kind === 'prueba' && inWeek(r));
     setPayload((p) => ({
@@ -2158,18 +2309,30 @@ function RecordForm({
         className="form-modal modal"
         role="dialog"
         aria-modal="true"
-        aria-label={record ? `${t('Editar registro')}: ${record.name}` : `${t('Crear registro')}: ${t(template.title)}`}
+        aria-label={
+          record
+            ? `${t('Editar registro')}: ${record.name}`
+            : `${t('Crear registro')}: ${t(template.title)}`
+        }
       >
         <form onSubmit={(e) => void submit(e)}>
           <div className="modal-head">
             <div>
               <span className="section-kicker">
-                {t(record ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO')} · {t(template.title).toUpperCase()}
+                {t(record ? 'EDITAR REGISTRO' : 'NUEVO REGISTRO')} ·{' '}
+                {t(template.title).toUpperCase()}
               </span>
-              <h2>{record ? t('Actualizar información') : `${t('Documentar')} ${t(template.title)}`}</h2>
+              <h2>
+                {record ? t('Actualizar información') : `${t('Documentar')} ${t(template.title)}`}
+              </h2>
               <p>{t(template.description)}</p>
             </div>
-            <button type="button" className="icon-button" onClick={onCancel} aria-label={t('Cerrar')}>
+            <button
+              type="button"
+              className="icon-button"
+              onClick={onCancel}
+              aria-label={t('Cerrar')}
+            >
               <X size={20} />
             </button>
           </div>
@@ -2177,7 +2340,11 @@ function RecordForm({
             <div className="form-tip">
               <ShieldCheck size={17} />
               <span>
-                {t('Registra datos técnicos y de ubicación. Guarda usuarios y contraseñas solo en la bóveda cifrada.')}
+                {t(
+                  template.id === 'central_telefonica'
+                    ? 'Guarda la ficha de la central y después abre sus credenciales desde el detalle. Usuarios y contraseñas van solo en la bóveda cifrada.'
+                    : 'Registra datos técnicos y de ubicación. Guarda usuarios y contraseñas solo en la bóveda cifrada.',
+                )}
               </span>
             </div>
             <div className="form-section-title">{t('Identificación')}</div>
@@ -2261,7 +2428,13 @@ function RecordForm({
                                 ? r.payload.tipo === 'telefono_ip'
                                 : field.key === 'computadora'
                                   ? r.payload.tipo === 'computadora' || r.payload.tipo === 'laptop'
-                                  : true),
+                                  : field.key === 'centralTelefonica'
+                                    ? r.payload.tipo === 'central_telefonica'
+                                    : field.key === 'servidor'
+                                      ? r.payload.tipo === 'servidor'
+                                      : field.key === 'ups'
+                                        ? r.payload.tipo === 'ups'
+                                        : true),
                         )
                         .filter(
                           (r) =>
@@ -2269,64 +2442,66 @@ function RecordForm({
                         )
                     : [];
                 return (
-                  <label
-                    className={`field ${field.type === 'textarea' ? 'span-2' : ''}`}
-                    key={field.key}
-                  >
-                    <span>
-                      {t(field.label)} {field.required && <em>*</em>}
-                    </span>
-                    {field.type === 'textarea' ? (
-                      <textarea
-                        required={field.required}
-                        maxLength={4000}
-                        rows={4}
-                        value={value}
-                        onChange={(e) => setField(field.key, e.target.value)}
-                        placeholder={t(field.placeholder || 'Escribe aquí…')}
-                      />
-                    ) : field.type === 'select' ? (
-                      <select
-                        required={field.required}
-                        value={value}
-                        onChange={(e) => setField(field.key, e.target.value)}
-                      >
-                        <option value="">{t('Seleccionar…')}</option>
-                        {field.options?.map((o) => (
-                          <option key={o} value={o}>{t(o)}</option>
-                        ))}
-                      </select>
-                    ) : field.type === 'record' ? (
-                      <select
-                        required={field.required}
-                        value={value}
-                        onChange={(e) => setField(field.key, e.target.value)}
-                      >
-                        <option value="">{t('Seleccionar registro…')}</option>
-                        {options.map((r) => (
-                          <option value={r.id} key={r.id}>
-                            {r.name} · {r.site}
-                          </option>
-                        ))}
-                      </select>
-                    ) : (
-                      <input
-                        required={field.required}
-                        type={
-                          field.type === 'number'
-                            ? 'number'
-                            : field.type === 'date'
-                              ? 'date'
-                              : 'text'
-                        }
-                        min={field.type === 'number' ? '0' : undefined}
-                        maxLength={4000}
-                        value={value}
-                        onChange={(e) => setField(field.key, e.target.value)}
-                        placeholder={field.placeholder || ''}
-                      />
-                    )}
-                  </label>
+                  <Fragment key={field.key}>
+                    {field.section && <div className="field-group-title">{t(field.section)}</div>}
+                    <label className={`field ${field.type === 'textarea' ? 'span-2' : ''}`}>
+                      <span>
+                        {t(field.label)} {field.required && <em>*</em>}
+                      </span>
+                      {field.type === 'textarea' ? (
+                        <textarea
+                          required={field.required}
+                          maxLength={4000}
+                          rows={4}
+                          value={value}
+                          onChange={(e) => setField(field.key, e.target.value)}
+                          placeholder={t(field.placeholder || 'Escribe aquí…')}
+                        />
+                      ) : field.type === 'select' ? (
+                        <select
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => setField(field.key, e.target.value)}
+                        >
+                          <option value="">{t('Seleccionar…')}</option>
+                          {field.options?.map((o) => (
+                            <option key={o} value={o}>
+                              {t(o)}
+                            </option>
+                          ))}
+                        </select>
+                      ) : field.type === 'record' ? (
+                        <select
+                          required={field.required}
+                          value={value}
+                          onChange={(e) => setField(field.key, e.target.value)}
+                        >
+                          <option value="">{t('Seleccionar registro…')}</option>
+                          {options.map((r) => (
+                            <option value={r.id} key={r.id}>
+                              {r.name} · {r.site}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          required={field.required}
+                          type={
+                            field.type === 'number'
+                              ? 'number'
+                              : field.type === 'date'
+                                ? 'date'
+                                : 'text'
+                          }
+                          min={field.type === 'number' ? '0' : undefined}
+                          maxLength={4000}
+                          value={value}
+                          onChange={(e) => setField(field.key, e.target.value)}
+                          placeholder={field.placeholder || ''}
+                        />
+                      )}
+                    </label>
+                  </Fragment>
                 );
               })}
             </div>

@@ -23,7 +23,7 @@ Navegador (Web Crypto, frase maestra en memoria)
 - `records` guarda cada ficha con tipo, sede, ubicación, verificación, datos específicos y fechas. El estado de uso de equipos y componentes vive en `payload.estadoUso`; las fichas anteriores sin ese campo se muestran como «Por confirmar».
 - `changes` conserva el actor local, la acción, la fecha y los campos modificados. La interfaz muestra los 500 eventos más recientes; la tabla conserva el historial completo.
 - Las referencias entre fichas usan identificadores de registro. Los enlaces troncales, puertos y nodos alimentan el visor de topología.
-- Las fichas de teléfono IP referencian puerto, cable, nodo, dispositivo PoE y computadora. Cada componente referencia su teléfono; la ficha del teléfono muestra los componentes vinculados.
+- Las fichas de teléfono IP referencian central telefónica, puerto, cable, nodo, dispositivo PoE y computadora. Cada componente referencia su teléfono; la ficha del teléfono muestra los componentes vinculados. La central muestra los teléfonos asociados y el diagrama dibuja sus relaciones de telefonía IP.
 - `vaults` contiene un único documento cifrado con credenciales y eventos privados. El navegador deriva una clave de la frase maestra y cifra antes de enviar. La API nunca recibe la frase ni el contenido descifrado. La revisión evita sobrescribir cambios de otra pestaña.
 - El inventario y los reportes se filtran en la interfaz por sede. La API valida tipos, sedes, estados, campos permitidos y tamaños antes de escribir.
 - Las escrituras usan transacciones. Las actualizaciones comprueban la fecha de la versión leída para detectar cambios concurrentes.
