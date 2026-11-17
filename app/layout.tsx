@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import './globals.css';
+import './theme.css';
 
 export const metadata: Metadata = {
   title: 'Documentación de red | Proyecto personal',
@@ -10,7 +11,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="es">
+    <html lang="es" suppressHydrationWarning>
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{var m=localStorage.getItem('red-institucional.theme');var d=m==='dark'||(m!=='light'&&matchMedia('(prefers-color-scheme: dark)').matches);document.documentElement.dataset.theme=d?'dark':'light';document.documentElement.style.colorScheme=d?'dark':'light'}catch(e){}",
+          }}
+        />
+      </head>
       <body>{children}</body>
     </html>
   );

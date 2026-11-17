@@ -1,12 +1,18 @@
 'use client';
 
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import de from './locales/de.json';
+import zh from './locales/zh.json';
+import fr from './locales/fr.json';
 
-export type Language = 'es' | 'en' | 'pt';
+export type Language = 'es' | 'en' | 'pt' | 'de' | 'zh' | 'fr';
 export const LANGUAGES: { code: Language; label: string }[] = [
   { code: 'es', label: 'Español' },
   { code: 'en', label: 'English' },
   { code: 'pt', label: 'Português' },
+  { code: 'de', label: 'Deutsch' },
+  { code: 'zh', label: '中文（简体）' },
+  { code: 'fr', label: 'Français' },
 ];
 const translations: Record<string, readonly [string, string]> = {
   'Red Institucional': ['Institutional Network', 'Rede Institucional'],
@@ -15,6 +21,7 @@ const translations: Record<string, readonly [string, string]> = {
   Proyecto: ['Project', 'Projeto'],
   Resumen: ['Overview', 'Visão geral'],
   Inventario: ['Inventory', 'Inventário'],
+  INVENTARIO: ['INVENTORY', 'INVENTÁRIO'],
   Topología: ['Topology', 'Topologia'],
   'Pendientes y pruebas': ['Tasks and tests', 'Pendências e testes'],
   'Reportes semanales': ['Weekly reports', 'Relatórios semanais'],
@@ -809,6 +816,12 @@ const translations: Record<string, readonly [string, string]> = {
     'Referência do manual ou diagrama',
   ],
   Mixto: ['Mixed', 'Misto'],
+  Tema: ['Theme', 'Tema'],
+  Claro: ['Light', 'Claro'],
+  Oscuro: ['Dark', 'Escuro'],
+  Automático: ['Automatic', 'Automático'],
+  'Cambiar tema': ['Change theme', 'Alterar tema'],
+  'Cambiar idioma': ['Change language', 'Alterar idioma'],
 };
 
 type I18nContextValue = {
@@ -818,31 +831,52 @@ type I18nContextValue = {
   dateLocale: string;
 };
 const I18nContext = createContext<I18nContextValue | null>(null);
-const dateLocales: Record<Language, string> = { es: 'es-MX', en: 'en-US', pt: 'pt-BR' };
+const dateLocales: Record<Language, string> = {
+  es: 'es-MX',
+  en: 'en-US',
+  pt: 'pt-BR',
+  de: 'de-DE',
+  zh: 'zh-CN',
+  fr: 'fr-FR',
+};
+const additionalTranslations: Record<'de' | 'zh' | 'fr', Record<string, string>> = { de, zh, fr };
 
 export function translate(language: Language, text: string): string {
   if (language === 'es') return text;
+  if (language === 'de' || language === 'zh' || language === 'fr') {
+    return additionalTranslations[language][text] ?? text;
+  }
   const translated = translations[text];
   return translated ? translated[language === 'en' ? 0 : 1] : text;
 }
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguage] = useState<Language>('es');
+  const [ready, setReady] = useState(false);
   useEffect(() => {
-    try {
-      const stored = localStorage.getItem('red-institucional.language');
-      if (stored === 'en' || stored === 'pt') setLanguage(stored);
-    } catch {
-      // The default Spanish interface remains usable when storage is unavailable.
-    }
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      try {
+        const stored = localStorage.getItem('red-institucional.language');
+        if (LANGUAGES.some((item) => item.code === stored)) setLanguage(stored as Language);
+      } catch {
+        // The default Spanish interface remains usable when storage is unavailable.
+      }
+      setReady(true);
+    });
+    return () => {
+      active = false;
+    };
   }, []);
   useEffect(() => {
-    document.documentElement.lang = language;
+    if (!ready) return;
+    document.documentElement.lang = language === 'zh' ? 'zh-CN' : language;
     try {
       localStorage.setItem('red-institucional.language', language);
     } catch {
       // Language selection still works for this session.
     }
-  }, [language]);
+  }, [language, ready]);
   const value = useMemo<I18nContextValue>(
     () => ({
       language,

@@ -2,7 +2,7 @@
 
 ## Versión breve
 
-Desarrollé una aplicación web multilingüe para documentar infraestructura de red y telefonía IP: inventario editable de equipos, centrales telefónicas, teléfonos y componentes, topología visual, seguimiento de activos, control de inconsistencias, historial y reportes semanales. Integré una bóveda de credenciales con cifrado en el navegador y respaldos cifrados. Construida con Next.js, React, TypeScript y SQLite.
+Desarrollé una aplicación web multilingüe para documentar infraestructura de red y telefonía IP: inventario editable de equipos, centrales telefónicas, teléfonos y componentes, topología visual, seguimiento de activos, control de inconsistencias, historial y reportes semanales. Diseñé una interfaz adaptable con temas claro, oscuro y automático y seis idiomas. Integré una bóveda de credenciales con cifrado en el navegador y respaldos cifrados. Construida con Next.js, React, TypeScript y SQLite.
 
 ## Versión con viñetas
 
@@ -10,11 +10,12 @@ Desarrollé una aplicación web multilingüe para documentar infraestructura de 
 - Añadí seguimiento del estado de uso (activo, inactivo, no utilizado o por confirmar), filtros por sede y alertas para etiquetas repetidas.
 - Construí un visor de topología basado en los registros y alertas para direcciones IP o puertos duplicados.
 - Implementé una API con validación, persistencia transaccional en SQLite, historial de cambios y reportes semanales descargables.
-- Incorporé español, inglés y portugués, fichas vinculadas de centrales, teléfonos y accesorios de telefonía IP y una bóveda separada que cifra credenciales antes de guardarlas.
+- Incorporé español, inglés, portugués, alemán, chino simplificado y francés, además de temas claro, oscuro y automático con preferencias persistentes.
+- Vinculé fichas de centrales, teléfonos y accesorios de telefonía IP e integré una bóveda separada que cifra credenciales antes de guardarlas.
 
 ## Texto para describir el proyecto en GitHub
 
-Aplicación multilingüe de documentación y seguimiento de red institucional desarrollada como proyecto personal. Organiza inventario, telefonía IP y componentes, visualiza conexiones, registra pruebas y pendientes, genera reportes semanales y permite resguardar credenciales cifradas. Incluye instrucciones para Windows y macOS y datos ficticios de demostración.
+Aplicación multilingüe de documentación y seguimiento de red institucional desarrollada como proyecto personal. Organiza inventario, telefonía IP y componentes, visualiza conexiones, registra pruebas y pendientes, genera reportes semanales y permite resguardar credenciales cifradas. Incluye temas claro, oscuro y automático, seis idiomas, instrucciones para Windows y macOS y datos ficticios de demostración.
 
 ## Cómo presentarlo
 

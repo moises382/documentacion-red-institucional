@@ -143,10 +143,10 @@ export function vaultEvent(
   title: string,
   earlier: VaultEvent[],
 ): VaultEvent[] {
-  return [{ id: crypto.randomUUID(), action, title, at: new Date().toISOString() }, ...earlier].slice(
-    0,
-    200,
-  );
+  return [
+    { id: crypto.randomUUID(), action, title, at: new Date().toISOString() },
+    ...earlier,
+  ].slice(0, 200);
 }
 export async function deriveVaultKey(
   passphrase: string,

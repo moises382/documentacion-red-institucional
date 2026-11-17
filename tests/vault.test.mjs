@@ -53,6 +53,6 @@ test('la bóveda cifra, desbloquea y respalda registros sin texto claro', async 
 });
 
 test('rechaza archivos de respaldo malformados', () => {
-  assert.throws(() => parseVaultBackup('{"entries":[]}' ));
+  assert.throws(() => parseVaultBackup('{"entries":[]}'));
   assert.equal(validateVaultEnvelope({ format: 'otro' }), false);
 });

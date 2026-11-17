@@ -89,9 +89,20 @@ export default function VaultPanel({
     setStored(result.vault ?? null);
   }, []);
   useEffect(() => {
-    void load()
-      .catch((cause) => setError(message(cause, 'No se pudo cargar la bóveda.')))
-      .finally(() => setLoading(false));
+    let active = true;
+    queueMicrotask(() => {
+      if (!active) return;
+      void load()
+        .catch((cause) => {
+          if (active) setError(message(cause, 'No se pudo cargar la bóveda.'));
+        })
+        .finally(() => {
+          if (active) setLoading(false);
+        });
+    });
+    return () => {
+      active = false;
+    };
   }, [load]);
   useEffect(() => {
     if (!key) return;

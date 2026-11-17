@@ -2,6 +2,7 @@
 
 import {
   Fragment,
+  createElement,
   useCallback,
   useEffect,
   useMemo,
@@ -31,7 +32,6 @@ import {
   HardDrive,
   Hash,
   Headphones,
-  Languages,
   Layers,
   LayoutDashboard,
   Laptop,
@@ -60,7 +60,9 @@ import {
   ZoomOut,
   type LucideIcon,
 } from 'lucide-react';
-import { LANGUAGES, LanguageProvider, useI18n } from './i18n';
+import { LanguageProvider, useI18n } from './i18n';
+import { LanguageControl, ThemeControl } from './preferences';
+import { ThemeProvider } from './theme';
 import VaultPanel from './vault-panel';
 import {
   EQUIPMENT_LABELS,
@@ -286,13 +288,15 @@ export default function Dashboard({
 }) {
   return (
     <LanguageProvider>
-      <DashboardContent displayName={displayName} hosted={hosted} />
+      <ThemeProvider>
+        <DashboardContent displayName={displayName} hosted={hosted} />
+      </ThemeProvider>
     </LanguageProvider>
   );
 }
 
 function DashboardContent({ displayName, hosted }: { displayName: string; hosted: boolean }) {
-  const { language, setLanguage, t, dateLocale } = useI18n();
+  const { t, dateLocale } = useI18n();
   const [records, setRecords] = useState<RecordItem[]>([]);
   const [changes, setChanges] = useState<ChangeItem[]>([]);
   const [loading, setLoading] = useState(true);
@@ -332,7 +336,13 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     }
   }, []);
   useEffect(() => {
-    void reload();
+    let active = true;
+    queueMicrotask(() => {
+      if (active) void reload();
+    });
+    return () => {
+      active = false;
+    };
   }, [reload]);
   useEffect(() => {
     if (!toast) return;
@@ -598,21 +608,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
             <strong>{t(nav.find((n) => n.id === view)?.title ?? '')}</strong>
           </div>
           <div className="topbar-actions">
-            <label className="language-select">
-              <Languages size={16} />
-              <select
-                value={language}
-                onChange={(event) => setLanguage(event.target.value as typeof language)}
-                aria-label={t('Idioma')}
-              >
-                {LANGUAGES.map((item) => (
-                  <option key={item.code} value={item.code}>
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-              <ChevronDown size={14} />
-            </label>
+            <ThemeControl />
+            <LanguageControl />
             <label className="site-select">
               <MapPin size={16} />
               <select
@@ -2065,7 +2062,6 @@ function DetailPanel({
 }) {
   const { t, dateLocale } = useI18n();
   const template = templateFor(record);
-  const Icon = getIcon(record);
   const resolve = (id: string) =>
     all.find((r) => r.id === id)?.name ?? t('Referencia no encontrada');
   return (
@@ -2088,9 +2084,7 @@ function DetailPanel({
           </button>
         </div>
         <div className="drawer-content">
-          <span className="drawer-icon">
-            <Icon size={27} />
-          </span>
+          <span className="drawer-icon">{createElement(getIcon(record), { size: 27 })}</span>
           <h2>{record.name}</h2>
           <p>
             {t(kindTitle(record))} · {record.site}

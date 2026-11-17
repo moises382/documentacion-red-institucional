@@ -66,12 +66,13 @@ export async function POST(request: Request) {
     if (body.action === 'initialize') {
       const revision = crypto.randomUUID();
       const updatedAt = new Date().toISOString();
-      const created = withTransaction((database) =>
-        database
-          .prepare(
-            'INSERT OR IGNORE INTO vaults (owner_id,revision,envelope,updated_at) VALUES (?,?,?,?)',
-          )
-          .run(ownerId, revision, JSON.stringify(envelope), updatedAt).changes,
+      const created = withTransaction(
+        (database) =>
+          database
+            .prepare(
+              'INSERT OR IGNORE INTO vaults (owner_id,revision,envelope,updated_at) VALUES (?,?,?,?)',
+            )
+            .run(ownerId, revision, JSON.stringify(envelope), updatedAt).changes,
       );
       return created
         ? json({ vault: { envelope, revision, updatedAt } }, 201)
@@ -90,12 +91,13 @@ export async function POST(request: Request) {
         return error('La configuración de cifrado no coincide.');
       const revision = crypto.randomUUID();
       const updatedAt = new Date().toISOString();
-      const changed = withTransaction((database) =>
-        database
-          .prepare(
-            'UPDATE vaults SET revision=?,envelope=?,updated_at=? WHERE owner_id=? AND revision=?',
-          )
-          .run(revision, JSON.stringify(envelope), updatedAt, ownerId, before.revision).changes,
+      const changed = withTransaction(
+        (database) =>
+          database
+            .prepare(
+              'UPDATE vaults SET revision=?,envelope=?,updated_at=? WHERE owner_id=? AND revision=?',
+            )
+            .run(revision, JSON.stringify(envelope), updatedAt, ownerId, before.revision).changes,
       );
       return changed
         ? json({ vault: { envelope, revision, updatedAt } })

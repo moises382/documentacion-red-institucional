@@ -1,6 +1,6 @@
 # Galería y recorrido del proyecto
 
-Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real. Las ocho capturas se tomaron antes de añadir la plantilla de central telefónica; esa ampliación se explica al final y se verificó visualmente con los nuevos datos de ejemplo.
+Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real. Las primeras ocho capturas se tomaron antes de añadir la plantilla de central telefónica; esa ampliación se explica más abajo. Las tres últimas muestran la interfaz actual.
 
 ## 1. Resumen: estado general del trabajo
 
@@ -68,6 +68,24 @@ La ficha `PBX-DEMO-COL-01` documenta una central física de ejemplo. Incluye mar
 
 Después de guardar una central nueva se abre su ficha. **Abrir credenciales de la central** lleva a la bóveda cifrada. Allí se crea una entrada vinculada a esta PBX para cada acceso: administración, troncal SIP o SSH, con usuario, contraseña, dirección y notas privadas. El archivo de respaldo de la bóveda sigue cifrado. La ficha técnica guarda solo la referencia del respaldo de configuración de la PBX, sin claves ni archivo privado.
 
+## 9. Tema oscuro: una vista para trabajo prolongado
+
+![Panel principal con tema oscuro y datos ficticios](capturas/09-tema-oscuro.jpg)
+
+La vista oscura conserva la estructura del panel y aumenta la separación visual entre navegación, tarjetas y datos. El mismo tema se aplica a tablas, formularios, diagramas y bóveda. El selector permanece en la barra superior para cambiar de aspecto sin salir de la sección actual.
+
+## 10. Idiomas: seis opciones desde la barra superior
+
+![Menú de idiomas con seis opciones](capturas/10-selector-idiomas.jpg)
+
+El botón **Idioma** permite elegir español, inglés, portugués, alemán, chino simplificado o francés. Cambian los títulos, menús, filtros, estados, formularios y fechas. Los nombres y notas escritos por el usuario se conservan en su idioma original. Las traducciones están incluidas en la aplicación, así que el cambio no envía registros ni secretos fuera de ella.
+
+## 11. Apariencia: claro, oscuro o automático
+
+![Menú de tema claro, oscuro y automático](capturas/11-selector-tema.jpg)
+
+**Claro** y **Oscuro** fijan la apariencia elegida. **Automático** sigue el modo configurado en Windows o macOS y se adapta si esa preferencia cambia mientras la aplicación está abierta. La elección de tema e idioma queda guardada en el navegador para futuras visitas.
+
 ## Cómo recorrer la demostración
 
 1. Instala y ejecuta el proyecto siguiendo [INSTALACION.md](../INSTALACION.md). En una base nueva, `npm run seed:demo` agrega registros ficticios.
@@ -75,6 +93,6 @@ Después de guardar una central nueva se abre su ficha. **Abrir credenciales de 
 3. En **Inventario**, prueba los filtros de sede, tipo, verificación y uso; abre una computadora o una etiqueta de cable.
 4. En **Topología**, compara el diagrama con los puertos y cables de ejemplo.
 5. En **Reportes semanales** y **Plantillas**, revisa cómo se documenta el trabajo y se añaden fichas nuevas.
-6. Usa el selector de idioma de la barra superior para cambiar entre español, inglés y portugués. En **Bóveda segura** puedes revisar el flujo de creación sin introducir secretos reales en la demostración.
+6. Prueba los botones **Tema** e **Idioma** de la barra superior. En **Bóveda segura** puedes revisar el flujo de creación sin introducir secretos reales en la demostración.
 
 Los datos locales se guardan en `data/network.sqlite`, archivo excluido de Git. El proyecto público comparte el **código y estas capturas de demostración**; no publica la base de datos ni credenciales.

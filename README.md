@@ -1,12 +1,12 @@
 # Documentación de red institucional
 
-Aplicación web en español para organizar el inventario y el seguimiento de un proyecto de documentación de red. Esta es la **versión personal de portafolio**: funciona en tu computadora con SQLite y puede cargarse con registros ficticios. No contiene información de una red institucional real.
+Aplicación web multilingüe para organizar el inventario y el seguimiento de un proyecto de documentación de red. Esta es la **versión personal de portafolio**: funciona en tu computadora con SQLite y puede cargarse con registros ficticios. No contiene información de una red institucional real.
 
 Repositorio público: [moises382/documentacion-red-institucional](https://github.com/moises382/documentacion-red-institucional).
 
 ## Así se ve el proyecto
 
-Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real. Se tomaron antes de incorporar la plantilla de central telefónica, que se describe más abajo.
+Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real. Las primeras ocho se tomaron antes de incorporar la plantilla de central telefónica; las tres últimas muestran la apariencia y los controles actuales.
 
 ### Resumen del proyecto
 
@@ -48,7 +48,21 @@ Los usuarios y contraseñas van en una **bóveda separada del inventario**. Se c
 
 La plantilla de central telefónica reúne la identificación del conmutador, IP y VLAN de voz, extensiones, troncales SIP, puertos FXO y FXS, rutas de llamadas, IVR, grabación, rack, UPS y continuidad. Cada teléfono IP puede vincularse a la central. Al guardar una central nueva se abre su ficha, desde donde el botón de credenciales lleva a la bóveda cifrada para guardar por separado el usuario y la contraseña de administración, de la troncal SIP u otros accesos.
 
-Consulta la [galería completa con explicación de las ocho pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
+### Apariencia oscura y controles de preferencias
+
+![Panel de resumen en tema oscuro con inventario y avances ficticios](docs/capturas/09-tema-oscuro.jpg)
+
+La vista oscura adapta el panel, el inventario, los formularios, la topología y la bóveda. El control **Tema** ofrece **Claro**, **Oscuro** y **Automático**; este último sigue la preferencia de apariencia de Windows o macOS.
+
+![Selector con español, inglés, portugués, alemán, chino simplificado y francés](docs/capturas/10-selector-idiomas.jpg)
+
+El botón **Idioma** cambia los textos de la interfaz entre seis lenguas. El contenido que una persona escriba en sus fichas permanece tal como fue registrado. Tanto el idioma como el tema elegidos se recuerdan en ese navegador.
+
+![Menú de apariencia con las opciones claro, oscuro y automático](docs/capturas/11-selector-tema.jpg)
+
+Las traducciones forman parte del código del proyecto: cambiar de idioma no envía inventario ni credenciales a un servicio de traducción.
+
+Consulta la [galería completa con explicación de las once pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
 
 ## Funciones
 
@@ -63,7 +77,7 @@ Consulta la [galería completa con explicación de las ocho pantallas](docs/CAPT
 - Historial de altas, cambios y eliminaciones.
 - Reportes semanales con borrador basado en los registros de la semana y descarga en Markdown.
 - Filtros por Colima, Tecomán, Manzanillo y Coquimatlán.
-- Interfaz en español, inglés y portugués, con preferencia guardada en el navegador.
+- Diseño adaptable con temas claro, oscuro y automático; selector de español, inglés, portugués, alemán, chino simplificado y francés. Las preferencias se guardan en el navegador.
 - Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
 
 ## Tecnologías
@@ -113,7 +127,8 @@ La versión original alojada en Sites usa una base de datos en la nube y conserv
 - `app/dashboard.tsx`: interfaz, filtros, formularios y diagramas.
 - `app/api/data/route.ts`: operaciones de lectura y escritura.
 - `app/api/vault/route.ts` y `lib/vault.ts`: almacenamiento cifrado y cifrado en el navegador.
-- `app/i18n.tsx`: textos y preferencia de idioma.
+- `app/i18n.tsx` y `app/locales/`: textos y preferencia de idioma.
+- `app/theme.tsx`, `app/preferences.tsx` y `app/theme.css`: temas y controles de apariencia e idioma.
 - `lib/models.ts`: tipos y plantillas de documentación.
 - `lib/record-validation.ts`: validación de los registros.
 - `lib/database.ts`: creación de tablas y acceso SQLite.
