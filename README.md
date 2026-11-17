@@ -6,13 +6,25 @@ Repositorio público: [moises382/documentacion-red-institucional](https://github
 
 ## Así se ve el proyecto
 
-Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real. Las primeras ocho se tomaron antes de incorporar la plantilla de central telefónica; las tres últimas muestran la apariencia y los controles actuales.
+Estas capturas muestran la **versión personal ejecutada con datos ficticios** mediante `npm run seed:demo`. Los nombres de equipos, las direcciones IP y las cifras de las imágenes son ejemplos; no describen una red institucional real. Las imágenes 12 a 15 muestran el diseño y las interacciones actuales; las anteriores documentan la evolución del proyecto.
 
 ### Resumen del proyecto
 
-![Panel moderno de resumen con indicadores de documentación y estados de uso](docs/capturas/01-resumen.jpg)
+![Panel renovado con acción prioritaria, sedes e indicadores que abren filtros](docs/capturas/12-resumen-profesional.png)
 
-El inicio reúne equipos inventariados, registros verificados, pendientes y pruebas. También separa el **estado de uso del equipo** (activo, inactivo, no utilizado o por confirmar) del **estado de verificación de sus datos**, y muestra el avance por sede.
+El inicio muestra una acción prioritaria basada en pendientes reales, filtros rápidos por sede e indicadores que llevan a la lista correspondiente. También separa el **estado de uso del equipo** (activo, inactivo, no utilizado o por confirmar) del **estado de verificación de sus datos**.
+
+### Búsqueda rápida
+
+![Búsqueda que localiza switches ficticios y permite abrir su ficha](docs/capturas/13-busqueda-rapida.png)
+
+El botón **Buscar en el proyecto** abre una búsqueda de secciones y registros. Escribe un nombre, una dirección IP o una sede; al elegir el resultado se abre la ficha. En Windows se puede usar **Ctrl+K** y en macOS **⌘K**. También admite flechas y Enter.
+
+### Vista en teléfono
+
+![Resumen en pantalla estrecha con búsqueda, preferencias y siguiente acción visibles](docs/capturas/15-resumen-movil.png)
+
+La barra organiza búsqueda, tema, idioma, sede y alta de registros en controles visibles. Los filtros de sedes pueden desplazarse horizontalmente sin mover toda la página.
 
 ### Inventario de equipos
 
@@ -50,7 +62,7 @@ La plantilla de central telefónica reúne la identificación del conmutador, IP
 
 ### Apariencia oscura y controles de preferencias
 
-![Panel de resumen en tema oscuro con inventario y avances ficticios](docs/capturas/09-tema-oscuro.jpg)
+![Panel renovado en tema oscuro con acción prioritaria y tarjetas interactivas](docs/capturas/14-resumen-oscuro.png)
 
 La vista oscura adapta el panel, el inventario, los formularios, la topología y la bóveda. El control **Tema** ofrece **Claro**, **Oscuro** y **Automático**; este último sigue la preferencia de apariencia de Windows o macOS.
 
@@ -62,7 +74,7 @@ El botón **Idioma** cambia los textos de la interfaz entre seis lenguas. El con
 
 Las traducciones forman parte del código del proyecto: cambiar de idioma no envía inventario ni credenciales a un servicio de traducción.
 
-Consulta la [galería completa con explicación de las once pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
+Consulta la [galería completa con explicación de las quince pantallas](docs/CAPTURAS.md), incluidos el reporte semanal y las plantillas.
 
 ## Funciones
 
@@ -77,6 +89,7 @@ Consulta la [galería completa con explicación de las once pantallas](docs/CAPT
 - Historial de altas, cambios y eliminaciones.
 - Reportes semanales con borrador basado en los registros de la semana y descarga en Markdown.
 - Filtros por Colima, Tecomán, Manzanillo y Coquimatlán.
+- Búsqueda rápida de secciones y fichas con atajo de teclado; indicadores y filtros de sede que abren directamente los registros correspondientes.
 - Diseño adaptable con temas claro, oscuro y automático; selector de español, inglés, portugués, alemán, chino simplificado y francés. Las preferencias se guardan en el navegador.
 - Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
 
@@ -128,7 +141,7 @@ La versión original alojada en Sites usa una base de datos en la nube y conserv
 - `app/api/data/route.ts`: operaciones de lectura y escritura.
 - `app/api/vault/route.ts` y `lib/vault.ts`: almacenamiento cifrado y cifrado en el navegador.
 - `app/i18n.tsx` y `app/locales/`: textos y preferencia de idioma.
-- `app/theme.tsx`, `app/preferences.tsx` y `app/theme.css`: temas y controles de apariencia e idioma.
+- `app/theme.tsx`, `app/preferences.tsx`, `app/theme.css` y `app/experience.css`: temas, controles y diseño adaptable.
 - `lib/models.ts`: tipos y plantillas de documentación.
 - `lib/record-validation.ts`: validación de los registros.
 - `lib/database.ts`: creación de tablas y acceso SQLite.

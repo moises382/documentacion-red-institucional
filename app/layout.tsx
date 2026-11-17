@@ -1,6 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import './theme.css';
+import './experience.css';
 
 export const metadata: Metadata = {
   title: 'Documentación de red | Proyecto personal',

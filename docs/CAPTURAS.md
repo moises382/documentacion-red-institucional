@@ -1,6 +1,6 @@
 # Galería y recorrido del proyecto
 
-Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real. Las primeras ocho capturas se tomaron antes de añadir la plantilla de central telefónica; esa ampliación se explica más abajo. Las tres últimas muestran la interfaz actual.
+Las imágenes siguientes son capturas de la **aplicación personal** ejecutada en una computadora con una base SQLite de demostración. Se generaron con `npm run seed:demo` sobre una base vacía: los equipos, nombres, ubicaciones, direcciones IP, avances y fechas son ficticios. No se muestran credenciales ni datos de una red institucional real. Las primeras once imágenes conservan etapas anteriores del proyecto. Las capturas 12 a 15 muestran el diseño actual.
 
 ## 1. Resumen: estado general del trabajo
 
@@ -86,6 +86,30 @@ El botón **Idioma** permite elegir español, inglés, portugués, alemán, chin
 
 **Claro** y **Oscuro** fijan la apariencia elegida. **Automático** sigue el modo configurado en Windows o macOS y se adapta si esa preferencia cambia mientras la aplicación está abierta. La elección de tema e idioma queda guardada en el navegador para futuras visitas.
 
+## 12. Panel renovado: empezar por la tarea importante
+
+![Panel actual en tema claro con la siguiente tarea, filtros de sede e indicadores](capturas/12-resumen-profesional.png)
+
+El bloque **Siguiente acción** presenta el primer pendiente abierto, una inconsistencia detectada o las fichas por revisar según el estado de los registros. Su botón abre la sección o ficha relacionada. Los indicadores de equipos, verificación, pendientes y pruebas también son botones: llevan al inventario o a la lista de seguimiento con el filtro correspondiente. Los botones de sede actualizan el contenido del panel y sus cifras.
+
+## 13. Búsqueda rápida: ir directamente a una ficha
+
+![Buscador con dos switches ficticios como resultados](capturas/13-busqueda-rapida.png)
+
+**Buscar en el proyecto** permite localizar una sección, equipo, IP o sede sin recorrer primero el inventario. La captura muestra dos switches de demostración. Al elegir uno, la aplicación cambia a su sede y abre la ficha. El atajo es **Ctrl+K** en Windows o **⌘K** en macOS. Las flechas, Enter y Escape permiten usarlo con teclado.
+
+## 14. Tema oscuro renovado
+
+![Panel actual en tema oscuro con el mismo contenido de demostración](capturas/14-resumen-oscuro.png)
+
+La variante oscura mantiene la jerarquía del panel, diferencia la acción principal y conserva contraste en tarjetas y controles. La elección de tema sigue disponible en la barra superior.
+
+## 15. Pantalla estrecha: controles a la vista
+
+![Resumen en teléfono con controles de búsqueda, tema, idioma y sede](capturas/15-resumen-movil.png)
+
+En un teléfono, la barra distribuye el alta de registros, la búsqueda, las preferencias y la sede en filas legibles. El panel muestra la acción prioritaria antes de las métricas. Los botones de las sedes se desplazan dentro de su propia fila y la tabla de inventario se desplaza dentro de su tarjeta, sin ensanchar la página completa.
+
 ## Cómo recorrer la demostración
 
 1. Instala y ejecuta el proyecto siguiendo [INSTALACION.md](../INSTALACION.md). En una base nueva, `npm run seed:demo` agrega registros ficticios.
@@ -93,6 +117,6 @@ El botón **Idioma** permite elegir español, inglés, portugués, alemán, chin
 3. En **Inventario**, prueba los filtros de sede, tipo, verificación y uso; abre una computadora o una etiqueta de cable.
 4. En **Topología**, compara el diagrama con los puertos y cables de ejemplo.
 5. En **Reportes semanales** y **Plantillas**, revisa cómo se documenta el trabajo y se añaden fichas nuevas.
-6. Prueba los botones **Tema** e **Idioma** de la barra superior. En **Bóveda segura** puedes revisar el flujo de creación sin introducir secretos reales en la demostración.
+6. Prueba **Buscar en el proyecto**, los indicadores y los filtros de sede; después cambia **Tema** e **Idioma** desde la barra superior. En **Bóveda segura** puedes revisar el flujo de creación sin introducir secretos reales en la demostración.
 
 Los datos locales se guardan en `data/network.sqlite`, archivo excluido de Git. El proyecto público comparte el **código y estas capturas de demostración**; no publica la base de datos ni credenciales.

@@ -6,6 +6,7 @@ import {
   useCallback,
   useEffect,
   useMemo,
+  useRef,
   useState,
   type FormEvent,
   type ReactNode,
@@ -311,6 +312,10 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const [modal, setModal] = useState<Modal>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
+  const [commandOpen, setCommandOpen] = useState(false);
+  const [commandQuery, setCommandQuery] = useState('');
+  const [commandActive, setCommandActive] = useState(0);
+  const commandInputRef = useRef<HTMLInputElement>(null);
   const [busy, setBusy] = useState(false);
   const [zoom, setZoom] = useState(1);
   const [workTab, setWorkTab] = useState<'pendientes' | 'pruebas'>('pendientes');
@@ -349,6 +354,20 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     const timer = setTimeout(() => setToast(''), 3500);
     return () => clearTimeout(timer);
   }, [toast]);
+  useEffect(() => {
+    const onShortcut = (event: KeyboardEvent) => {
+      if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === 'k') {
+        event.preventDefault();
+        setCommandOpen(true);
+      }
+      if (event.key === 'Escape') setCommandOpen(false);
+    };
+    window.addEventListener('keydown', onShortcut);
+    return () => window.removeEventListener('keydown', onShortcut);
+  }, []);
+  useEffect(() => {
+    if (commandOpen) commandInputRef.current?.focus();
+  }, [commandOpen]);
   const scoped = useMemo(
     () => records.filter((r) => site === 'Todas las sedes' || r.site === site),
     [records, site],
@@ -379,7 +398,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
         (site === 'Todas las sedes' || a.site === site || b.site === site)
       );
     });
-  const verified = scoped.filter((r) => r.verification === 'verificado' && r.kind !== 'reporte');
+  const verified = scoped.filter(
+    (r) => r.verification === 'verificado' && inventoryKinds.includes(r.kind),
+  );
   const documentable = scoped.filter(
     (r) => r.kind !== 'reporte' && r.kind !== 'pendiente' && r.kind !== 'prueba',
   );
@@ -389,6 +410,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           100,
       )
     : 0;
+  const reviewCount = documentable.filter((r) => r.verification !== 'verificado').length;
+  const focusPending = pending[0];
   const filteredInventory = useMemo(
     () =>
       scoped
@@ -467,6 +490,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
         });
     return issues;
   }, [scoped, records]);
+  const focusIssue = automaticIssues[0];
 
   async function mutate(body: Record<string, unknown>, success: string) {
     setBusy(true);
@@ -531,6 +555,47 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
       : displayName.includes('@')
         ? displayName.split('@')[0]
         : displayName.split(' ')[0];
+  const commandTerm = commandQuery.trim().toLocaleLowerCase();
+  const commandPages = nav
+    .filter((item) => !commandTerm || t(item.title).toLocaleLowerCase().includes(commandTerm))
+    .slice(0, commandTerm ? 8 : 4);
+  const commandRecords = records
+    .filter((record) => inventoryKinds.includes(record.kind))
+    .filter(
+      (record) =>
+        !commandTerm ||
+        [
+          record.name,
+          record.site,
+          record.location,
+          kindTitle(record),
+          ...Object.values(record.payload),
+        ]
+          .join(' ')
+          .toLocaleLowerCase()
+          .includes(commandTerm),
+    )
+    .slice(0, 6);
+  const commandRows = [
+    ...commandPages.map((item) => ({ type: 'page' as const, item })),
+    ...commandRecords.map((item) => ({ type: 'record' as const, item })),
+  ];
+  function runCommand(result: (typeof commandRows)[number]) {
+    setCommandOpen(false);
+    setCommandQuery('');
+    setCommandActive(0);
+    if (result.type === 'page') {
+      navigate(result.item.id);
+      return;
+    }
+    setSite(result.item.site);
+    setKindFilter('todos');
+    setVerificationFilter('todos');
+    setUsageFilter('todos');
+    setSearch('');
+    navigate('inventario');
+    setSelectedId(result.item.id);
+  }
   return (
     <div className="app-shell">
       <aside className={`sidebar ${mobileMenu ? 'sidebar-open' : ''}`}>
@@ -595,42 +660,64 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
       )}
       <div className="main-area">
         <header className="topbar">
-          <button
-            className="menu-button icon-button"
-            onClick={() => setMobileMenu(true)}
-            aria-label={t('Abrir menú')}
-          >
-            <Menu size={22} />
-          </button>
-          <div className="breadcrumbs">
-            <span>{t('Proyecto')}</span>
-            <span className="breadcrumb-divider">/</span>
-            <strong>{t(nav.find((n) => n.id === view)?.title ?? '')}</strong>
-          </div>
-          <div className="topbar-actions">
-            <ThemeControl />
-            <LanguageControl />
-            <label className="site-select">
-              <MapPin size={16} />
-              <select
-                value={site}
-                onChange={(e) => setSite(e.target.value as SiteFilter)}
-                aria-label={t('Filtrar por sede')}
-              >
-                <option value="Todas las sedes">{t('Todas las sedes')}</option>
-                {SITES.map((s) => (
-                  <option key={s}>{s}</option>
-                ))}
-              </select>
-              <ChevronDown size={14} />
-            </label>
+          <div className="topbar-heading">
             <button
-              className="button button-primary top-add"
+              className="menu-button icon-button"
+              onClick={() => setMobileMenu(true)}
+              aria-label={t('Abrir menú')}
+            >
+              <Menu size={22} />
+            </button>
+            <div className="breadcrumbs">
+              <span>{t('Proyecto')}</span>
+              <span className="breadcrumb-divider">/</span>
+              <strong>{t(nav.find((n) => n.id === view)?.title ?? '')}</strong>
+            </div>
+            <button
+              className="button button-primary topbar-mobile-add"
               onClick={() => setModal({ mode: 'choose' })}
             >
-              <Plus size={17} />
-              {t('Nuevo registro')}
+              <Plus size={16} />
+              <span>{t('Nuevo registro')}</span>
             </button>
+          </div>
+          <div className="topbar-tools">
+            <button
+              type="button"
+              className="command-trigger"
+              onClick={() => setCommandOpen(true)}
+              aria-label={t('Buscar en el proyecto')}
+              aria-keyshortcuts="Control+K Meta+K"
+            >
+              <Search size={17} />
+              <span>{t('Buscar en el proyecto')}</span>
+              <kbd>Ctrl / ⌘ K</kbd>
+            </button>
+            <div className="topbar-actions">
+              <ThemeControl />
+              <LanguageControl />
+              <label className="site-select">
+                <MapPin size={16} />
+                <select
+                  value={site}
+                  onChange={(e) => setSite(e.target.value as SiteFilter)}
+                  aria-label={t('Filtrar por sede')}
+                >
+                  <option value="Todas las sedes">{t('Todas las sedes')}</option>
+                  {SITES.map((s) => (
+                    <option key={s}>{s}</option>
+                  ))}
+                </select>
+                <ChevronDown size={14} />
+              </label>
+              <button
+                className="button button-primary top-add"
+                onClick={() => setModal({ mode: 'choose' })}
+              >
+                <Plus size={17} />
+                {t('Nuevo registro')}
+              </button>
+            </div>
           </div>
         </header>
         <main className="content">
@@ -693,25 +780,79 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                         </button>
                       </div>
                     </div>
-                    <div className="hero-art" aria-hidden="true">
-                      <div className="art-orbit art-orbit-one" />
-                      <div className="art-orbit art-orbit-two" />
-                      <div className="art-line art-line-one" />
-                      <div className="art-line art-line-two" />
-                      <div className="art-line art-line-three" />
-                      <span className="art-node art-node-main">
-                        <Network size={28} />
-                      </span>
-                      <span className="art-node art-node-a">
-                        <Server size={22} />
-                      </span>
-                      <span className="art-node art-node-b">
-                        <Wifi size={22} />
-                      </span>
-                      <span className="art-node art-node-c">
-                        <Printer size={22} />
-                      </span>
-                      <span className="art-pulse" />
+                    <div className="hero-focus">
+                      <div className="hero-focus-top">
+                        <span className="focus-kicker">
+                          <Activity size={15} /> {t('Siguiente acción')}
+                        </span>
+                        <span className="focus-progress">{percentage}%</span>
+                      </div>
+                      <strong>
+                        {focusPending?.name ??
+                          focusIssue?.title ??
+                          t(
+                            reviewCount ? 'Verificación del inventario' : 'Sin pendientes abiertos',
+                          )}
+                      </strong>
+                      <p>
+                        {focusPending?.payload.detalle ??
+                          focusIssue?.description ??
+                          (reviewCount
+                            ? `${reviewCount} ${t('registros por revisar')}`
+                            : t('Los nuevos hallazgos aparecerán aquí.'))}
+                      </p>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (focusPending) {
+                            navigate('pendientes');
+                            setSelectedId(focusPending.id);
+                          } else if (focusIssue) {
+                            navigate('pendientes');
+                          } else if (reviewCount) {
+                            navigate('inventario');
+                          } else {
+                            setModal({ mode: 'choose' });
+                          }
+                        }}
+                      >
+                        {t(
+                          focusPending
+                            ? 'Abrir pendiente'
+                            : focusIssue
+                              ? 'Ver todos'
+                              : reviewCount
+                                ? 'Revisar inventario'
+                                : 'Agregar registro',
+                        )}
+                        <ArrowRight size={16} />
+                      </button>
+                    </div>
+                  </div>
+                  <div className="site-pills" aria-label={t('Filtrar por sede')}>
+                    <span className="site-pills-label">
+                      <MapPin size={15} /> {t('Filtrar por sede')}
+                    </span>
+                    <div className="site-pills-scroll">
+                      {(['Todas las sedes', ...SITES] as SiteFilter[]).map((item) => (
+                        <button
+                          type="button"
+                          key={item}
+                          aria-pressed={site === item}
+                          onClick={() => setSite(item)}
+                        >
+                          {item === 'Todas las sedes' ? t(item) : item}
+                          <strong>
+                            {item === 'Todas las sedes'
+                              ? records.filter((record) => inventoryKinds.includes(record.kind))
+                                  .length
+                              : records.filter(
+                                  (record) =>
+                                    record.site === item && inventoryKinds.includes(record.kind),
+                                ).length}
+                          </strong>
+                        </button>
+                      ))}
                     </div>
                   </div>
                   <div className="section-heading">
@@ -727,24 +868,46 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                       label="Equipos inventariados"
                       value={equipment.length}
                       color="blue"
+                      onClick={() => {
+                        setKindFilter('equipo');
+                        setVerificationFilter('todos');
+                        setUsageFilter('todos');
+                        setSearch('');
+                        navigate('inventario');
+                      }}
                     />
                     <Stat
                       icon={CheckCircle2}
                       label="Registros verificados"
                       value={verified.length}
                       color="green"
+                      onClick={() => {
+                        setKindFilter('todos');
+                        setVerificationFilter('verificado');
+                        setUsageFilter('todos');
+                        setSearch('');
+                        navigate('inventario');
+                      }}
                     />
                     <Stat
                       icon={AlertCircle}
                       label="Pendientes abiertos"
                       value={pending.length + automaticIssues.length}
                       color="orange"
+                      onClick={() => {
+                        setWorkTab('pendientes');
+                        navigate('pendientes');
+                      }}
                     />
                     <Stat
                       icon={FlaskConical}
                       label="Pruebas registradas"
                       value={tests.length}
                       color="purple"
+                      onClick={() => {
+                        setWorkTab('pruebas');
+                        navigate('pendientes');
+                      }}
                     />
                   </div>
                   <div className="usage-overview card">
@@ -1565,6 +1728,116 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           )}
         </main>
       </div>
+      {commandOpen && (
+        <div
+          className="command-scrim"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget) setCommandOpen(false);
+          }}
+        >
+          <div
+            className="command-dialog"
+            role="dialog"
+            aria-modal="true"
+            aria-label={t('Buscar en el proyecto')}
+          >
+            <div className="command-input-wrap">
+              <Search size={20} aria-hidden="true" />
+              <input
+                ref={commandInputRef}
+                value={commandQuery}
+                placeholder={t('Buscar equipo, IP o sección…')}
+                aria-label={t('Buscar en el proyecto')}
+                onChange={(event) => {
+                  setCommandQuery(event.target.value);
+                  setCommandActive(0);
+                }}
+                onKeyDown={(event) => {
+                  if (event.key === 'ArrowDown') {
+                    event.preventDefault();
+                    setCommandActive((current) => Math.min(current + 1, commandRows.length - 1));
+                  } else if (event.key === 'ArrowUp') {
+                    event.preventDefault();
+                    setCommandActive((current) => Math.max(current - 1, 0));
+                  } else if (event.key === 'Enter' && commandRows[commandActive]) {
+                    event.preventDefault();
+                    runCommand(commandRows[commandActive]);
+                  }
+                }}
+              />
+              <button
+                className="command-close"
+                type="button"
+                onClick={() => setCommandOpen(false)}
+                aria-label={t('Cerrar')}
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="command-results">
+              {commandRows.length === 0 ? (
+                <div className="command-empty">
+                  <CircleHelp size={22} />
+                  <strong>{t('Sin coincidencias')}</strong>
+                  <span>{t('Prueba con otro nombre, IP o sede.')}</span>
+                </div>
+              ) : (
+                <>
+                  {commandPages.length > 0 && (
+                    <div className="command-group-label">{t('Secciones')}</div>
+                  )}
+                  {commandPages.map((item, index) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={`command-result ${commandActive === index ? 'active' : ''}`}
+                      onMouseEnter={() => setCommandActive(index)}
+                      onClick={() => runCommand({ type: 'page', item })}
+                    >
+                      <span className="command-result-icon">
+                        <item.icon size={18} />
+                      </span>
+                      <span className="command-result-copy">
+                        <strong>{t(item.title)}</strong>
+                        <small>{t('Sección')}</small>
+                      </span>
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </button>
+                  ))}
+                  {commandRecords.length > 0 && (
+                    <div className="command-group-label">{t('Registros')}</div>
+                  )}
+                  {commandRecords.map((item, index) => (
+                    <button
+                      type="button"
+                      key={item.id}
+                      className={`command-result ${commandActive === commandPages.length + index ? 'active' : ''}`}
+                      onMouseEnter={() => setCommandActive(commandPages.length + index)}
+                      onClick={() => runCommand({ type: 'record', item })}
+                    >
+                      <span className="command-result-icon">
+                        <Boxes size={18} />
+                      </span>
+                      <span className="command-result-copy">
+                        <strong>{item.name}</strong>
+                        <small>
+                          {item.site} · {t(kindTitle(item))} · {item.location}
+                        </small>
+                      </span>
+                      <ArrowRight size={16} aria-hidden="true" />
+                    </button>
+                  ))}
+                </>
+              )}
+            </div>
+            <div className="command-footer">
+              <span>↑ ↓ {t('para navegar')}</span>
+              <span>↵ {t('para abrir')}</span>
+              <span>Esc {t('para cerrar')}</span>
+            </div>
+          </div>
+        </div>
+      )}
       {selected && (
         <DetailPanel
           record={selected}
@@ -1661,15 +1934,22 @@ function Stat({
   label,
   value,
   color,
+  onClick,
 }: {
   icon: LucideIcon;
   label: string;
   value: number;
   color: string;
+  onClick: () => void;
 }) {
   const { t } = useI18n();
   return (
-    <div className="stat-card card">
+    <button
+      type="button"
+      className="stat-card card"
+      onClick={onClick}
+      aria-label={`${t(label)}: ${value}`}
+    >
       <span className={`stat-icon stat-${color}`}>
         <Icon size={22} />
       </span>
@@ -1678,7 +1958,7 @@ function Stat({
         <span>{t(label)}</span>
       </div>
       <ArrowRight className="stat-arrow" size={16} />
-    </div>
+    </button>
   );
 }
 function PageHeader({

@@ -2,7 +2,7 @@
 
 ## Versión breve
 
-Desarrollé una aplicación web multilingüe para documentar infraestructura de red y telefonía IP: inventario editable de equipos, centrales telefónicas, teléfonos y componentes, topología visual, seguimiento de activos, control de inconsistencias, historial y reportes semanales. Diseñé una interfaz adaptable con temas claro, oscuro y automático y seis idiomas. Integré una bóveda de credenciales con cifrado en el navegador y respaldos cifrados. Construida con Next.js, React, TypeScript y SQLite.
+Desarrollé una aplicación web multilingüe para documentar infraestructura de red y telefonía IP: inventario editable de equipos, centrales telefónicas, teléfonos y componentes, topología visual, seguimiento de activos, control de inconsistencias, historial y reportes semanales. Diseñé una interfaz adaptable con búsqueda rápida, accesos directos, temas claro, oscuro y automático y seis idiomas. Integré una bóveda de credenciales con cifrado en el navegador y respaldos cifrados. Construida con Next.js, React, TypeScript y SQLite.
 
 ## Versión con viñetas
 
@@ -11,6 +11,7 @@ Desarrollé una aplicación web multilingüe para documentar infraestructura de 
 - Construí un visor de topología basado en los registros y alertas para direcciones IP o puertos duplicados.
 - Implementé una API con validación, persistencia transaccional en SQLite, historial de cambios y reportes semanales descargables.
 - Incorporé español, inglés, portugués, alemán, chino simplificado y francés, además de temas claro, oscuro y automático con preferencias persistentes.
+- Rediseñé el panel con una tarea prioritaria, filtros de sede e indicadores interactivos, y añadí búsqueda de fichas y secciones con atajos de teclado.
 - Vinculé fichas de centrales, teléfonos y accesorios de telefonía IP e integré una bóveda separada que cifra credenciales antes de guardarlas.
 
 ## Texto para describir el proyecto en GitHub
