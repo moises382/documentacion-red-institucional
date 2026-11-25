@@ -28,11 +28,15 @@ Navegador (Web Crypto, frase maestra en memoria)
 - El inventario y los reportes se filtran en la interfaz por sede. La API valida tipos, sedes, estados, campos permitidos y tamaños antes de escribir.
 - Las escrituras usan transacciones. Las actualizaciones comprueban la fecha de la versión leída para detectar cambios concurrentes.
 - La aplicación señala referencias faltantes y duplicados de dirección IP, puerto de switch o código de etiqueta de cable.
+- `plan_red` documenta la subred IPv4 en CIDR, la puerta de enlace y el porcentaje de reserva. `network-plan.ts` calcula la máscara, capacidad utilizable y direcciones necesarias a partir de los registros visibles; no consulta ni escanea la red. Si no hay una subred documentada, el resumen muestra «Por configurar».
+- `example-project.ts` crea una oficina ficticia aislada en `localStorage`. Al activarla, las altas, ediciones, eliminaciones e historial se guardan en esa copia del navegador; nunca se envían a la API ni se mezclan con SQLite o D1. La bóveda queda deshabilitada en el ejemplo.
+- `record-pdf.ts` genera una ficha PDF en el navegador para cualquier registro, con campos documentados y referencias resueltas. Renderiza texto con las fuentes del navegador para admitir los seis idiomas y excluye la bóveda de credenciales.
 
 ## Límites actuales
 
 - Los datos viven en un archivo SQLite local y no se sincronizan entre computadoras.
 - El respaldo cifrado permite trasladar la bóveda; el inventario técnico no se incluye en ese respaldo.
+- El proyecto de ejemplo se guarda solo en el navegador donde se cargó. Para respaldar trabajo real en la edición local, copia `data/network.sqlite` con el servidor detenido.
 - No hay cuentas ni roles en esta edición. Para alojarla en Internet habría que añadir autenticación, autorización y almacenamiento administrado.
 - El diagrama ordena los equipos por tipo y presenta sus conexiones; no es un editor libre de diagramas.
 - El historial de la interfaz muestra los 500 cambios recientes para mantener la carga ligera.

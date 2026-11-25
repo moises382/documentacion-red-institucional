@@ -11,6 +11,8 @@ La ficha normal de un equipo contiene datos técnicos y referencias. **Usuarios,
 
 La bóveda se bloquea después de diez minutos sin actividad en esa pantalla. También puedes bloquearla manualmente. El botón de respaldo descarga un archivo JSON cifrado; no es un CSV ni contiene contraseñas legibles.
 
+El botón **Crear PDF** exporta solo datos de la ficha técnica. No incluye la bóveda ni su respaldo. Evita escribir contraseñas en nombres, notas o campos técnicos, porque esos datos sí pueden aparecer en el PDF. El botón **Cargar ejemplo** crea datos ficticios en el navegador y no ofrece acceso a la bóveda.
+
 ## Cómo funciona
 
 - El navegador deriva una clave con **PBKDF2-HMAC-SHA-256, 600 000 iteraciones** y una sal aleatoria de 16 bytes.

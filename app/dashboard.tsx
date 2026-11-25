@@ -66,6 +66,14 @@ import { LanguageControl, ThemeControl } from './preferences';
 import { ThemeProvider } from './theme';
 import VaultPanel from './vault-panel';
 import {
+  createExampleProject,
+  EXAMPLE_STORAGE_KEY,
+  type ExampleProject,
+} from '@/lib/example-project';
+import { networkChoices, summarizeNetwork } from '@/lib/network-plan';
+import { buildRecordPdf } from '@/lib/record-pdf';
+import { validateRecord } from '@/lib/record-validation';
+import {
   EQUIPMENT_LABELS,
   EQUIPMENT_STATES,
   KIND_LABELS,
@@ -131,6 +139,7 @@ const nav: { id: View; title: string; icon: LucideIcon }[] = [
   { id: 'boveda', title: 'Bóveda segura', icon: LockKeyhole },
 ];
 const inventoryKinds: Kind[] = [
+  'plan_red',
   'equipo',
   'ip',
   'puerto',
@@ -198,6 +207,8 @@ function summary(record: RecordItem, all: RecordItem[]) {
   const resolve = (id?: string) =>
     all.find((r) => r.id === id)?.name ?? (id ? 'Referencia no encontrada' : '');
   switch (record.kind) {
+    case 'plan_red':
+      return [p.subred, p.gateway].filter(Boolean).join(' · ');
     case 'equipo':
       return [p.modelo, p.ipGestion].filter(Boolean).join(' · ') || 'Sin detalles adicionales';
     case 'ip':
@@ -298,8 +309,11 @@ export default function Dashboard({
 
 function DashboardContent({ displayName, hosted }: { displayName: string; hosted: boolean }) {
   const { t, dateLocale } = useI18n();
-  const [records, setRecords] = useState<RecordItem[]>([]);
-  const [changes, setChanges] = useState<ChangeItem[]>([]);
+  const [realRecords, setRealRecords] = useState<RecordItem[]>([]);
+  const [realChanges, setRealChanges] = useState<ChangeItem[]>([]);
+  const [exampleProject, setExampleProject] = useState<ExampleProject | null>(null);
+  const records = exampleProject?.records ?? realRecords;
+  const changes = exampleProject?.changes ?? realChanges;
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [toast, setToast] = useState('');
@@ -320,6 +334,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const [zoom, setZoom] = useState(1);
   const [workTab, setWorkTab] = useState<'pendientes' | 'pruebas'>('pendientes');
   const [preferredVaultRecordId, setPreferredVaultRecordId] = useState('');
+  const [networkId, setNetworkId] = useState('');
+  const [pdfRecordId, setPdfRecordId] = useState('');
   const selected = records.find((r) => r.id === selectedId) ?? null;
 
   const reload = useCallback(async () => {
@@ -331,8 +347,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
         changes: ChangeItem[];
       };
       if (!response.ok) throw new Error(result.error ?? 'No se pudo cargar la información.');
-      setRecords(result.records);
-      setChanges(result.changes);
+      setRealRecords(result.records);
+      setRealChanges(result.changes);
       setError('');
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo cargar la información.');
@@ -348,6 +364,13 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     return () => {
       active = false;
     };
+  }, [reload]);
+  useEffect(() => {
+    const refresh = () => {
+      if (document.visibilityState === 'visible') void reload();
+    };
+    document.addEventListener('visibilitychange', refresh);
+    return () => document.removeEventListener('visibilitychange', refresh);
   }, [reload]);
   useEffect(() => {
     if (!toast) return;
@@ -372,6 +395,10 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     () => records.filter((r) => site === 'Todas las sedes' || r.site === site),
     [records, site],
   );
+  const networks = useMemo(() => networkChoices(scoped), [scoped]);
+  const currentNetwork = networks.find((item) => item.id === networkId) ?? networks[0];
+  const networkSummary = currentNetwork ? summarizeNetwork(scoped, currentNetwork) : null;
+  const pdfRecord = scoped.find((item) => item.id === pdfRecordId) ?? scoped[0];
   const visibleChanges = useMemo(
     () => changes.filter((c) => site === 'Todas las sedes' || c.site === site),
     [changes, site],
@@ -495,6 +522,58 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   async function mutate(body: Record<string, unknown>, success: string) {
     setBusy(true);
     try {
+      if (exampleProject) {
+        const action = body.action as 'create' | 'update' | 'delete';
+        const old = exampleProject.records.find((item) => item.id === body.id);
+        if (action !== 'create' && !old) throw new Error('El registro de ejemplo ya no existe.');
+        if (old && body.baseUpdatedAt !== old.updatedAt)
+          throw new Error('Este registro cambió. Vuelve a abrirlo.');
+        const checked = action === 'delete' ? null : validateRecord(body.record);
+        if (checked && !checked.value) throw new Error(checked.message || 'Registro no válido.');
+        const value = checked?.value;
+        if (old && value && value.kind !== old.kind)
+          throw new Error('No se puede cambiar el tipo de registro.');
+        const id = old?.id ?? crypto.randomUUID();
+        const now = new Date(
+          Math.max(Date.now(), Date.parse(old?.updatedAt || '') + 1 || 0),
+        ).toISOString();
+        const item: RecordItem | undefined = value
+          ? { ...value, id, createdAt: old?.createdAt || now, updatedAt: now }
+          : undefined;
+        const next: ExampleProject = {
+          version: 1,
+          records:
+            action === 'create' && item
+              ? [item, ...exampleProject.records]
+              : action === 'update' && item
+                ? exampleProject.records.map((record) => (record.id === id ? item : record))
+                : exampleProject.records.filter((record) => record.id !== id),
+          changes: [
+            {
+              id: crypto.randomUUID(),
+              recordId: id,
+              action: (action === 'create'
+                ? 'creado'
+                : action === 'update'
+                  ? 'actualizado'
+                  : 'eliminado') as ChangeItem['action'],
+              kind: (item || old)!.kind,
+              name: (item || old)!.name,
+              site: (item || old)!.site,
+              actor: 'Ejemplo local',
+              description: success,
+              occurredAt: now,
+            },
+            ...exampleProject.changes,
+          ].slice(0, 500),
+        };
+        localStorage.setItem(EXAMPLE_STORAGE_KEY, JSON.stringify(next));
+        setExampleProject(next);
+        setToast(success);
+        setModal(null);
+        if (action === 'delete') setSelectedId(null);
+        return id;
+      }
       const response = await fetch('/api/data', {
         method: 'POST',
         headers: { 'content-type': 'application/json' },
@@ -510,6 +589,56 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'No se pudo guardar.');
       return false;
+    } finally {
+      setBusy(false);
+    }
+  }
+  function toggleExample() {
+    setSelectedId(null);
+    setModal(null);
+    setView('resumen');
+    setSite('Todas las sedes');
+    setNetworkId('');
+    setPdfRecordId('');
+    if (exampleProject) {
+      setExampleProject(null);
+      setToast('Volviste a tus datos reales.');
+      return;
+    }
+    let project: ExampleProject | null = null;
+    try {
+      const saved = localStorage.getItem(EXAMPLE_STORAGE_KEY);
+      if (saved) {
+        const parsed = JSON.parse(saved) as ExampleProject;
+        if (parsed.version === 1 && Array.isArray(parsed.records) && Array.isArray(parsed.changes))
+          project = parsed;
+      }
+    } catch {
+      // A damaged browser copy can be replaced by a fresh example.
+    }
+    project ||= createExampleProject();
+    localStorage.setItem(EXAMPLE_STORAGE_KEY, JSON.stringify(project));
+    setExampleProject(project);
+    setToast('Proyecto de ejemplo cargado. Edita el Plan de red para cambiar su nombre.');
+  }
+  async function downloadPdf(record: RecordItem) {
+    setBusy(true);
+    try {
+      const bytes = await buildRecordPdf(record, records);
+      const file = new Blob([Uint8Array.from(bytes)], { type: 'application/pdf' });
+      const url = URL.createObjectURL(file);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `ficha-${record.name
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-zA-Z0-9_-]+/g, '-')
+        .slice(0, 60)}.pdf`;
+      link.click();
+      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+      setToast('Ficha PDF descargada.');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'No se pudo generar el PDF.');
     } finally {
       setBusy(false);
     }
@@ -630,6 +759,11 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           ))}
         </nav>
         <div className="sidebar-spacer" />
+        <button type="button" className="example-load" onClick={toggleExample}>
+          <Layers size={17} />
+          <span>{t(exampleProject ? 'Volver a mis datos' : 'Cargar ejemplo')}</span>
+          <ArrowRight size={15} />
+        </button>
         <div className="privacy-box">
           <ShieldCheck size={17} />
           <div>
@@ -721,6 +855,16 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           </div>
         </header>
         <main className="content">
+          {exampleProject && (
+            <div className="example-banner" role="status">
+              <span>
+                <strong>{t('Proyecto de ejemplo')}</strong> ·{' '}
+                {exampleProject.records.find((item) => item.kind === 'plan_red')?.name ||
+                  'Oficina de ejemplo'}
+              </span>
+              <span>{t('Datos ficticios guardados solo en este navegador')}</span>
+            </div>
+          )}
           {error && (
             <div className="error-banner" role="alert">
               <AlertCircle size={18} />
@@ -1373,7 +1517,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                       records={records}
                       zoom={zoom}
                       onSelect={setSelectedId}
-                      onCreate={() => openNew(TEMPLATES[0])}
+                      onCreate={() => openNew(TEMPLATES.find((item) => item.id === 'switch')!)}
                     />
                   ))}
                   {crossSiteLinks.length > 0 && (
@@ -1717,7 +1861,18 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                   </div>
                 </section>
               )}
-              {view === 'boveda' && (
+              {view === 'boveda' && exampleProject && (
+                <div className="example-vault card">
+                  <LockKeyhole size={26} />
+                  <h2>{t('Bóveda no disponible en el ejemplo')}</h2>
+                  <p>
+                    {t(
+                      'El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.',
+                    )}
+                  </p>
+                </div>
+              )}
+              {view === 'boveda' && !exampleProject && (
                 <VaultPanel
                   records={records}
                   site={site}
@@ -1728,6 +1883,145 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           )}
         </main>
       </div>
+      <aside className="network-aside" aria-label={t('Resumen de la red')}>
+        <div className="network-aside-inner">
+          <span className="network-kicker">{t('EN TIEMPO REAL')}</span>
+          <h2>{t('Resumen de la red')}</h2>
+          {currentNetwork && networkSummary ? (
+            <>
+              <div className={`network-health ${networkSummary.valid ? 'is-valid' : 'is-warning'}`}>
+                <span />
+                {t(networkSummary.valid ? 'Plan de red válido' : 'Revisar plan de red')}
+              </div>
+              {networks.length > 1 && (
+                <label className="network-choice">
+                  <span>{t('Red activa')}</span>
+                  <select
+                    value={currentNetwork.id}
+                    onChange={(event) => setNetworkId(event.target.value)}
+                  >
+                    {networks.map((choice) => (
+                      <option key={choice.id} value={choice.id}>
+                        {choice.site} · {choice.subnet.cidr}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+              )}
+              <div className="network-subnet">
+                <span>
+                  {t('SUBRED ACTUAL')} · {currentNetwork.site}
+                </span>
+                <strong>{currentNetwork.subnet.cidr}</strong>
+                <small>
+                  {t('Máscara de red')} · {currentNetwork.subnet.mask}
+                </small>
+              </div>
+              <div className="network-metrics">
+                <div className="network-metric network-metric-lead">
+                  <span>{t('Equipos en inventario')}</span>
+                  <strong>{networkSummary.equipment}</strong>
+                </div>
+                <div className="network-metric">
+                  <span>
+                    <i className="dot-static" />
+                    {t('IP fijas actuales')}
+                  </span>
+                  <strong>{networkSummary.staticIps}</strong>
+                </div>
+                <div className="network-metric">
+                  <span>
+                    <i className="dot-dhcp" />
+                    {t('Computadoras DHCP')}
+                  </span>
+                  <strong>{networkSummary.dhcpComputers}</strong>
+                </div>
+                <div className="network-metric">
+                  <span>
+                    <i className="dot-gateway" />
+                    {t('Puerta de enlace')}
+                  </span>
+                  <strong>{networkSummary.gateway}</strong>
+                </div>
+                <div className="network-metric">
+                  <span>
+                    <i className="dot-reserve" />
+                    {t('Reserva de crecimiento')}
+                  </span>
+                  <strong>
+                    {networkSummary.reserve}{' '}
+                    <small>({currentNetwork.reservePercent || 20} %)</small>
+                  </strong>
+                </div>
+                <div className="network-metric network-metric-total">
+                  <span>{t('Direcciones necesarias')}</span>
+                  <strong>{networkSummary.needed}</strong>
+                </div>
+              </div>
+              <p className="network-capacity">
+                {t('Capacidad utilizable')}: {networkSummary.usable} ·{' '}
+                {t('Calculado con los registros de la sede')}
+              </p>
+              {currentNetwork.record?.kind === 'plan_red' && (
+                <button
+                  type="button"
+                  className="network-edit"
+                  onClick={() => openEdit(currentNetwork.record!)}
+                >
+                  <Pencil size={15} />
+                  {t('Editar plan de red')}
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="network-empty">
+              <Network size={25} />
+              <strong>{t('Subred por configurar')}</strong>
+              <p>
+                {t('Documenta la subred y la puerta de enlace para ver un resumen actualizado.')}
+              </p>
+              <button
+                className="button button-secondary"
+                onClick={() => openNew(TEMPLATES.find((item) => item.kind === 'plan_red')!)}
+              >
+                <Plus size={16} />
+                {t('Crear plan de red')}
+              </button>
+            </div>
+          )}
+          <div className="network-pdf">
+            <span className="network-kicker">{t('DOCUMENTOS')}</span>
+            <h3>{t('Ficha de registro')}</h3>
+            <p>{t('Elige cualquier registro y descarga su ficha en PDF.')}</p>
+            <select
+              aria-label={t('Seleccionar registro para PDF')}
+              value={pdfRecord?.id || ''}
+              onChange={(event) => setPdfRecordId(event.target.value)}
+              disabled={!pdfRecord}
+            >
+              {pdfRecord ? (
+                scoped.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name} · {t(kindTitle(item))}
+                  </option>
+                ))
+              ) : (
+                <option value="">{t('Sin registros')}</option>
+              )}
+            </select>
+            <button
+              type="button"
+              className="button button-primary"
+              disabled={!pdfRecord || busy}
+              onClick={() => pdfRecord && void downloadPdf(pdfRecord)}
+            >
+              <FileText size={17} />
+              {t('Crear PDF')}
+            </button>
+            <small>{t('Las credenciales de la bóveda no se incluyen.')}</small>
+          </div>
+        </div>
+      </aside>
       {commandOpen && (
         <div
           className="command-scrim"
@@ -1845,6 +2139,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           onClose={() => setSelectedId(null)}
           onEdit={() => openEdit(selected)}
           onDelete={() => void remove(selected)}
+          onPdf={() => void downloadPdf(selected)}
+          canUseVault={!exampleProject}
           onVault={() => {
             setPreferredVaultRecordId(selected.id);
             setSelectedId(null);
@@ -2331,6 +2627,8 @@ function DetailPanel({
   onClose,
   onEdit,
   onDelete,
+  onPdf,
+  canUseVault,
   onVault,
 }: {
   record: RecordItem;
@@ -2338,6 +2636,8 @@ function DetailPanel({
   onClose: () => void;
   onEdit: () => void;
   onDelete: () => void;
+  onPdf: () => void;
+  canUseVault: boolean;
   onVault: () => void;
 }) {
   const { t, dateLocale } = useI18n();
@@ -2487,18 +2787,24 @@ function DetailPanel({
           )}
         </div>
         <div className="drawer-footer">
-          {record.kind === 'equipo' && record.payload.tipo === 'telefono_ip' && (
+          {canUseVault && record.kind === 'equipo' && record.payload.tipo === 'telefono_ip' && (
             <button className="button button-secondary" onClick={onVault}>
               <LockKeyhole size={16} />
               {t('Abrir credenciales del teléfono')}
             </button>
           )}
-          {record.kind === 'equipo' && record.payload.tipo === 'central_telefonica' && (
-            <button className="button button-secondary" onClick={onVault}>
-              <LockKeyhole size={16} />
-              {t('Abrir credenciales de la central')}
-            </button>
-          )}
+          {canUseVault &&
+            record.kind === 'equipo' &&
+            record.payload.tipo === 'central_telefonica' && (
+              <button className="button button-secondary" onClick={onVault}>
+                <LockKeyhole size={16} />
+                {t('Abrir credenciales de la central')}
+              </button>
+            )}
+          <button className="button button-secondary" onClick={onPdf}>
+            <FileText size={16} />
+            {t('Crear PDF')}
+          </button>
           <button className="button button-primary" onClick={onEdit}>
             <Pencil size={16} />
             {t('Editar registro')}

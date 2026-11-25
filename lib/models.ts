@@ -3,6 +3,7 @@ export type Site = (typeof SITES)[number];
 export const VERIFICATIONS = ['verificado', 'pendiente', 'por_confirmar'] as const;
 export type Verification = (typeof VERIFICATIONS)[number];
 export const KINDS = [
+  'plan_red',
   'equipo',
   'ip',
   'puerto',
@@ -92,6 +93,24 @@ const equipmentStateFields: Field[] = [
 
 export const TEMPLATES: Template[] = [
   {
+    id: 'plan_red',
+    title: 'Plan de red',
+    kind: 'plan_red',
+    icon: 'Network',
+    description: 'Subred, máscara, puerta de enlace y reserva de crecimiento.',
+    fields: [
+      { key: 'subred', label: 'Subred IPv4 (CIDR)', placeholder: '192.168.1.0/24', required: true },
+      { key: 'gateway', label: 'Puerta de enlace', placeholder: '192.168.1.1' },
+      {
+        key: 'reservaPorcentaje',
+        label: 'Reserva de crecimiento (%)',
+        type: 'number',
+        placeholder: '20',
+      },
+      { key: 'notas', label: 'Notas', type: 'textarea' },
+    ],
+  },
+  {
     id: 'switch',
     title: 'Switch',
     kind: 'equipo',
@@ -128,6 +147,13 @@ export const TEMPLATES: Template[] = [
       { key: 'almacenamiento', label: 'Almacenamiento' },
       { key: 'sistema', label: 'Sistema operativo' },
       { key: 'ipGestion', label: 'Dirección IP' },
+      {
+        key: 'asignacionIp',
+        label: 'Asignación IP',
+        type: 'select',
+        options: ['DHCP', 'Estática', 'Por confirmar'],
+      },
+      { key: 'subredAsignada', label: 'Subred asignada (CIDR)', placeholder: '192.168.1.0/24' },
       { key: 'mac', label: 'Dirección MAC' },
       { key: 'area', label: 'Área usuaria' },
       { key: 'puerto', label: 'Puerto de switch', type: 'record', recordKind: 'puerto' },
@@ -151,6 +177,13 @@ export const TEMPLATES: Template[] = [
       { key: 'memoria', label: 'Memoria RAM' },
       { key: 'sistema', label: 'Sistema operativo' },
       { key: 'ipGestion', label: 'Dirección IP' },
+      {
+        key: 'asignacionIp',
+        label: 'Asignación IP',
+        type: 'select',
+        options: ['DHCP', 'Estática', 'Por confirmar'],
+      },
+      { key: 'subredAsignada', label: 'Subred asignada (CIDR)', placeholder: '192.168.1.0/24' },
       { key: 'mac', label: 'Dirección MAC' },
       { key: 'area', label: 'Área usuaria' },
       ...equipmentStateFields,
@@ -731,6 +764,7 @@ export const TEMPLATES: Template[] = [
   },
 ];
 export const KIND_LABELS: Record<Kind, string> = {
+  plan_red: 'Plan de red',
   equipo: 'Equipo',
   ip: 'Dirección IP',
   puerto: 'Puerto',
@@ -768,6 +802,9 @@ export const EQUIPMENT_LABELS: Record<EquipmentType, string> = {
 };
 export function templateFor(record: Pick<RecordItem, 'kind' | 'payload'>): Template {
   if (record.kind === 'equipo')
-    return TEMPLATES.find((t) => t.id === record.payload.tipo) ?? TEMPLATES[0];
+    return (
+      TEMPLATES.find((t) => t.id === record.payload.tipo) ??
+      TEMPLATES.find((t) => t.id === 'switch')!
+    );
   return TEMPLATES.find((t) => t.kind === record.kind) ?? TEMPLATES[0];
 }

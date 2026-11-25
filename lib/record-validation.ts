@@ -8,6 +8,7 @@ import {
   type Kind,
   type RecordItem,
 } from './models.ts';
+import { ipInSubnet, parseSubnet } from './network-plan.ts';
 
 export type RecordInput = Omit<RecordItem, 'id' | 'createdAt' | 'updatedAt'>;
 
@@ -56,6 +57,20 @@ export function validateRecord(input: unknown): { value?: RecordInput; message?:
     )
       return { message: `El campo «${field.label}» no es válido.` };
   }
+  if (value.kind === 'plan_red') {
+    const subnet = parseSubnet(payload.subred || '');
+    if (!subnet) return { message: 'Escribe una subred IPv4 válida en formato CIDR.' };
+    if (payload.gateway && !ipInSubnet(payload.gateway, subnet))
+      return { message: 'La puerta de enlace debe estar dentro de la subred.' };
+    if (payload.reservaPorcentaje) {
+      const reserve = Number(payload.reservaPorcentaje);
+      if (!Number.isFinite(reserve) || reserve < 0 || reserve > 90)
+        return { message: 'La reserva de crecimiento debe estar entre 0 y 90 %.' };
+    }
+    payload.subred = subnet.cidr;
+  }
+  if (payload.subredAsignada && !parseSubnet(payload.subredAsignada))
+    return { message: 'La subred asignada debe estar en formato CIDR.' };
   if (JSON.stringify(payload).length > 16000)
     return { message: 'El registro es demasiado grande.' };
   return {

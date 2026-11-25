@@ -92,6 +92,9 @@ Consulta la [galería completa con explicación de las quince pantallas](docs/CA
 - Búsqueda rápida de secciones y fichas con atajo de teclado; indicadores y filtros de sede que abren directamente los registros correspondientes.
 - Diseño adaptable con temas claro, oscuro y automático; selector de español, inglés, portugués, alemán, chino simplificado y francés. Las preferencias se guardan en el navegador.
 - Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
+- Resumen lateral de red que se actualiza al guardar cambios: subred IPv4, máscara, equipos, IP fijas, computadoras DHCP, puerta de enlace, reserva de crecimiento y direcciones necesarias. Se puede documentar más de una red mediante la plantilla **Plan de red**.
+- Botón **Crear PDF** en la barra derecha y en cada ficha para descargar cualquier registro. El PDF incluye datos técnicos y excluye las credenciales de la bóveda.
+- Botón **Cargar ejemplo** abajo a la izquierda. Abre una oficina ficticia con 43 equipos y un plan `192.168.1.0/24`, tal como en la captura de referencia. El ejemplo se guarda solo en ese navegador; puedes editarlo y volver a tus datos reales sin mezclarlos. Cambia el nombre de la oficina editando el registro **Plan de red**.
 
 ## Tecnologías
 
@@ -107,11 +110,12 @@ Necesitas **Node.js 24 o posterior** y npm en Windows o macOS.
 
    ```bash
    npm ci
-   npm run seed:demo
    npm run dev
    ```
 
 4. Abre [http://127.0.0.1:3000](http://127.0.0.1:3000).
+
+5. Presiona **Cargar ejemplo** en el menú izquierdo para explorar un proyecto completo sin llenar formularios. `npm run seed:demo` sigue disponible para generar registros ficticios en la base local si quieres probar ese flujo por separado.
 
 `seed:demo` es opcional. Solo añade datos ficticios cuando la base está vacía. Para comenzar sin ejemplos, omite ese comando.
 
