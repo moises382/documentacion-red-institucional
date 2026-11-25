@@ -71,7 +71,7 @@ import {
   type ExampleProject,
 } from '@/lib/example-project';
 import { networkChoices, summarizeNetwork } from '@/lib/network-plan';
-import { buildRecordPdf } from '@/lib/record-pdf';
+import { recordSheetGroups } from '@/lib/record-sheet';
 import { validateRecord } from '@/lib/record-validation';
 import {
   EQUIPMENT_LABELS,
@@ -336,7 +336,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const [preferredVaultRecordId, setPreferredVaultRecordId] = useState('');
   const [networkId, setNetworkId] = useState('');
   const [pdfRecordId, setPdfRecordId] = useState('');
+  const [pdfPreviewId, setPdfPreviewId] = useState<string | null>(null);
   const selected = records.find((r) => r.id === selectedId) ?? null;
+  const pdfPreviewRecord = records.find((r) => r.id === pdfPreviewId) ?? null;
 
   const reload = useCallback(async () => {
     try {
@@ -383,7 +385,10 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
         event.preventDefault();
         setCommandOpen(true);
       }
-      if (event.key === 'Escape') setCommandOpen(false);
+      if (event.key === 'Escape') {
+        setCommandOpen(false);
+        setPdfPreviewId(null);
+      }
     };
     window.addEventListener('keydown', onShortcut);
     return () => window.removeEventListener('keydown', onShortcut);
@@ -600,6 +605,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     setSite('Todas las sedes');
     setNetworkId('');
     setPdfRecordId('');
+    setPdfPreviewId(null);
     if (exampleProject) {
       setExampleProject(null);
       setToast('Volviste a tus datos reales.');
@@ -621,27 +627,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     setExampleProject(project);
     setToast('Proyecto de ejemplo cargado. Edita el Plan de red para cambiar su nombre.');
   }
-  async function downloadPdf(record: RecordItem) {
-    setBusy(true);
-    try {
-      const bytes = await buildRecordPdf(record, records);
-      const file = new Blob([Uint8Array.from(bytes)], { type: 'application/pdf' });
-      const url = URL.createObjectURL(file);
-      const link = document.createElement('a');
-      link.href = url;
-      link.download = `ficha-${record.name
-        .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '')
-        .replace(/[^a-zA-Z0-9_-]+/g, '-')
-        .slice(0, 60)}.pdf`;
-      link.click();
-      window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-      setToast('Ficha PDF descargada.');
-    } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'No se pudo generar el PDF.');
-    } finally {
-      setBusy(false);
-    }
+  function openPdfPreview(record: RecordItem) {
+    setPdfPreviewId(record.id);
   }
   function openNew(template: Template) {
     setModal({ mode: 'form', template });
@@ -1430,13 +1417,24 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                                     {shortDate(r.updatedAt, dateLocale)}
                                   </td>
                                   <td>
-                                    <button
-                                      className="row-action"
-                                      onClick={() => openEdit(r)}
-                                      aria-label={`Editar ${r.name}`}
-                                    >
-                                      <Pencil size={16} />
-                                    </button>
+                                    <div className="row-actions">
+                                      <button
+                                        type="button"
+                                        className="row-pdf-action"
+                                        onClick={() => openPdfPreview(r)}
+                                        aria-label={`${t('Crear PDF')}: ${r.name}`}
+                                      >
+                                        <FileText size={15} />
+                                        PDF
+                                      </button>
+                                      <button
+                                        className="row-action"
+                                        onClick={() => openEdit(r)}
+                                        aria-label={`Editar ${r.name}`}
+                                      >
+                                        <Pencil size={16} />
+                                      </button>
+                                    </div>
                                   </td>
                                 </tr>
                               );
@@ -1771,6 +1769,10 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                               <button onClick={() => setSelectedId(r.id)}>
                                 {t('Ver detalle')}
                               </button>
+                              <button onClick={() => openPdfPreview(r)}>
+                                <FileText size={15} />
+                                PDF
+                              </button>
                               <button onClick={() => downloadReport(r)}>
                                 <ArrowDownToLine size={15} />
                                 {t('Descargar')}
@@ -1992,7 +1994,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           <div className="network-pdf">
             <span className="network-kicker">{t('DOCUMENTOS')}</span>
             <h3>{t('Ficha de registro')}</h3>
-            <p>{t('Elige cualquier registro y descarga su ficha en PDF.')}</p>
+            <p>
+              {t('Elige cualquier registro para revisar su ficha en tabla antes de guardarla.')}
+            </p>
             <select
               aria-label={t('Seleccionar registro para PDF')}
               value={pdfRecord?.id || ''}
@@ -2012,8 +2016,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
             <button
               type="button"
               className="button button-primary"
-              disabled={!pdfRecord || busy}
-              onClick={() => pdfRecord && void downloadPdf(pdfRecord)}
+              disabled={!pdfRecord}
+              onClick={() => pdfRecord && openPdfPreview(pdfRecord)}
             >
               <FileText size={17} />
               {t('Crear PDF')}
@@ -2139,7 +2143,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           onClose={() => setSelectedId(null)}
           onEdit={() => openEdit(selected)}
           onDelete={() => void remove(selected)}
-          onPdf={() => void downloadPdf(selected)}
+          onPdf={() => openPdfPreview(selected)}
           canUseVault={!exampleProject}
           onVault={() => {
             setPreferredVaultRecordId(selected.id);
@@ -2214,6 +2218,9 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
               setSelectedId(savedId);
           }}
         />
+      )}
+      {pdfPreviewRecord && (
+        <PdfPreview record={pdfPreviewRecord} all={records} onClose={() => setPdfPreviewId(null)} />
       )}
       {toast && (
         <div className="toast" role="status">
@@ -2617,6 +2624,105 @@ function TopologyDiagram({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PdfPreview({
+  record,
+  all,
+  onClose,
+}: {
+  record: RecordItem;
+  all: RecordItem[];
+  onClose: () => void;
+}) {
+  const { t, dateLocale } = useI18n();
+  const groups = recordSheetGroups(record, all, t, dateLocale);
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = `${record.name} · ${t('Ficha de registro')}`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [record.name, t]);
+
+  return (
+    <div
+      className="pdf-preview-scrim"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="pdf-preview-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-preview-title"
+      >
+        <div className="pdf-preview-toolbar">
+          <div>
+            <span className="section-kicker">{t('VISTA PREVIA DEL DOCUMENTO')}</span>
+            <h2 id="pdf-preview-title">{t('Ficha en tabla')}</h2>
+            <p>{t('Revisa la información. El archivo solo se guarda cuando tú lo elijas.')}</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label={t('Cerrar')}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="pdf-preview-scroll">
+          <div className="pdf-preview-document">
+            <header className="pdf-sheet-header">
+              <span>{t('DOCUMENTACIÓN DE RED')}</span>
+              <h1>{record.name}</h1>
+              <p>
+                {record.site} · {t('Ficha de registro')}
+              </p>
+            </header>
+            <table className="pdf-sheet-table">
+              <thead>
+                <tr>
+                  <th scope="col">{t('Campo')}</th>
+                  <th scope="col">{t('Información')}</th>
+                </tr>
+              </thead>
+              {groups.map((group) => (
+                <tbody key={group.title}>
+                  <tr className="pdf-sheet-section">
+                    <th scope="colgroup" colSpan={2}>
+                      {group.title}
+                    </th>
+                  </tr>
+                  {group.rows.map((row) => (
+                    <tr key={row.label}>
+                      <th scope="row">{row.label}</th>
+                      <td>{row.value}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              ))}
+            </table>
+            <p className="pdf-sheet-footer">
+              {t('Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.')}
+            </p>
+          </div>
+        </div>
+        <div className="pdf-preview-actions">
+          <span>
+            {t('En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.')}
+          </span>
+          <div>
+            <button className="button button-secondary" type="button" onClick={onClose}>
+              {t('Cerrar')}
+            </button>
+            <button className="button button-primary" type="button" onClick={() => window.print()}>
+              <FileText size={17} />
+              {t('Guardar como PDF o imprimir')}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }

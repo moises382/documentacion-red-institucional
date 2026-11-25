@@ -93,7 +93,7 @@ Consulta la [galería completa con explicación de las quince pantallas](docs/CA
 - Diseño adaptable con temas claro, oscuro y automático; selector de español, inglés, portugués, alemán, chino simplificado y francés. Las preferencias se guardan en el navegador.
 - Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
 - Resumen lateral de red que se actualiza al guardar cambios: subred IPv4, máscara, equipos, IP fijas, computadoras DHCP, puerta de enlace, reserva de crecimiento y direcciones necesarias. Se puede documentar más de una red mediante la plantilla **Plan de red**.
-- Botón **Crear PDF** en la barra derecha y en cada ficha para descargar cualquier registro. El PDF incluye datos técnicos y excluye las credenciales de la bóveda.
+- Botón **PDF** en cada fila del inventario y en los reportes, además de **Crear PDF** en la barra derecha y en todas las fichas. Abre una vista previa organizada por tablas; solo el botón **Guardar como PDF o imprimir** abre el diálogo del navegador, donde eliges guardar el archivo y su destino. La ficha incluye datos técnicos y excluye las credenciales de la bóveda.
 - Botón **Cargar ejemplo** abajo a la izquierda. Abre una oficina ficticia con 43 equipos y un plan `192.168.1.0/24`, tal como en la captura de referencia. El ejemplo se guarda solo en ese navegador; puedes editarlo y volver a tus datos reales sin mezclarlos. Cambia el nombre de la oficina editando el registro **Plan de red**.
 
 ## Tecnologías

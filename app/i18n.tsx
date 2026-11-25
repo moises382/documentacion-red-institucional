@@ -276,6 +276,13 @@ const translations: Record<string, readonly [string, string]> = {
   'Estado de verificación': ['Verification status', 'Estado de verificação'],
   'Contenido del reporte': ['Report content', 'Conteúdo do relatório'],
   'Datos técnicos': ['Technical details', 'Dados técnicos'],
+  'Nombre del registro': ['Record name', 'Nome do registro'],
+  'Tipo de registro': ['Record type', 'Tipo de registro'],
+  Verificación: ['Verification', 'Verificação'],
+  'Control y seguimiento': ['Control and follow-up', 'Controle e acompanhamento'],
+  Campo: ['Field', 'Campo'],
+  Información: ['Information', 'Informação'],
+  'DOCUMENTACIÓN DE RED': ['NETWORK DOCUMENTATION', 'DOCUMENTAÇÃO DE REDE'],
   'Rellenar borrador con registros de esta semana': [
     'Fill draft with this week’s records',
     'Preencher rascunho com os registros da semana',
@@ -878,12 +885,27 @@ const translations: Record<string, readonly [string, string]> = {
   'Crear plan de red': ['Create network plan', 'Criar plano de rede'],
   DOCUMENTOS: ['DOCUMENTS', 'DOCUMENTOS'],
   'Ficha de registro': ['Record sheet', 'Ficha de registro'],
-  'Elige cualquier registro y descarga su ficha en PDF.': [
-    'Choose any record and download its PDF sheet.',
-    'Escolha qualquer registro e baixe sua ficha em PDF.',
+  'Elige cualquier registro para revisar su ficha en tabla antes de guardarla.': [
+    'Choose any record to review its table before saving it.',
+    'Escolha qualquer registro para revisar sua tabela antes de salvá-la.',
   ],
   'Seleccionar registro para PDF': ['Select record for PDF', 'Selecionar registro para PDF'],
   'Crear PDF': ['Create PDF', 'Criar PDF'],
+  'VISTA PREVIA DEL DOCUMENTO': ['DOCUMENT PREVIEW', 'PRÉ-VISUALIZAÇÃO DO DOCUMENTO'],
+  'Ficha en tabla': ['Table-based record sheet', 'Ficha em tabela'],
+  'Revisa la información. El archivo solo se guarda cuando tú lo elijas.': [
+    'Review the information. The file is saved only when you choose to do so.',
+    'Revise as informações. O arquivo só é salvo quando você decidir.',
+  ],
+  'Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.': [
+    'Technical sheet from the inventory. Vault credentials are excluded.',
+    'Ficha técnica do inventário. As credenciais do cofre não são incluídas.',
+  ],
+  'En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.': [
+    'In the browser dialog, choose Save as PDF and the destination folder.',
+    'Na janela do navegador, escolha Salvar como PDF e a pasta de destino.',
+  ],
+  'Guardar como PDF o imprimir': ['Save as PDF or print', 'Salvar como PDF ou imprimir'],
   'Las credenciales de la bóveda no se incluyen.': [
     'Vault credentials are not included.',
     'As credenciais do cofre não são incluídas.',

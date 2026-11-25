@@ -30,7 +30,7 @@ Navegador (Web Crypto, frase maestra en memoria)
 - La aplicación señala referencias faltantes y duplicados de dirección IP, puerto de switch o código de etiqueta de cable.
 - `plan_red` documenta la subred IPv4 en CIDR, la puerta de enlace y el porcentaje de reserva. `network-plan.ts` calcula la máscara, capacidad utilizable y direcciones necesarias a partir de los registros visibles; no consulta ni escanea la red. Si no hay una subred documentada, el resumen muestra «Por configurar».
 - `example-project.ts` crea una oficina ficticia aislada en `localStorage`. Al activarla, las altas, ediciones, eliminaciones e historial se guardan en esa copia del navegador; nunca se envían a la API ni se mezclan con SQLite o D1. La bóveda queda deshabilitada en el ejemplo.
-- `record-pdf.ts` genera una ficha PDF en el navegador para cualquier registro, con campos documentados y referencias resueltas. Renderiza texto con las fuentes del navegador para admitir los seis idiomas y excluye la bóveda de credenciales.
+- `record-sheet.ts` prepara los campos de cualquier registro para una ficha tabular con referencias resueltas. La vista previa usa una tabla HTML y estilos de impresión A4; el navegador abre el diálogo de guardar como PDF únicamente tras pulsar el botón de la vista previa. La bóveda de credenciales queda excluida.
 
 ## Límites actuales
 

@@ -552,7 +552,6 @@
   "Crear plan de red": "Créer un plan réseau",
   "DOCUMENTOS": "DOCUMENTS",
   "Ficha de registro": "Fiche de registre",
-  "Elige cualquier registro y descarga su ficha en PDF.": "Choisissez une fiche et téléchargez son PDF.",
   "Seleccionar registro para PDF": "Choisir une fiche pour le PDF",
   "Crear PDF": "Créer un PDF",
   "Las credenciales de la bóveda no se incluyen.": "Les identifiants du coffre ne sont pas inclus.",
@@ -561,5 +560,19 @@
   "Proyecto de ejemplo": "Projet exemple",
   "Datos ficticios guardados solo en este navegador": "Données fictives enregistrées seulement dans ce navigateur",
   "Bóveda no disponible en el ejemplo": "Coffre indisponible dans cet exemple",
-  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "Le projet exemple ne contient ni ne stocke d’identifiants. Revenez à vos données réelles pour utiliser le coffre sécurisé."
+  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "Le projet exemple ne contient ni ne stocke d’identifiants. Revenez à vos données réelles pour utiliser le coffre sécurisé.",
+  "Nombre del registro": "Nom de la fiche",
+  "Tipo de registro": "Type de fiche",
+  "Verificación": "Vérification",
+  "Control y seguimiento": "Contrôle et suivi",
+  "Campo": "Champ",
+  "Información": "Information",
+  "DOCUMENTACIÓN DE RED": "DOCUMENTATION RÉSEAU",
+  "Elige cualquier registro para revisar su ficha en tabla antes de guardarla.": "Choisissez une fiche et vérifiez son tableau avant de l’enregistrer.",
+  "VISTA PREVIA DEL DOCUMENTO": "APERÇU DU DOCUMENT",
+  "Ficha en tabla": "Fiche en tableau",
+  "Revisa la información. El archivo solo se guarda cuando tú lo elijas.": "Vérifiez les informations. Le fichier est enregistré seulement si vous le choisissez.",
+  "Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.": "Fiche technique issue de l’inventaire. Sans identifiants du coffre.",
+  "En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.": "Dans la boîte de dialogue du navigateur, choisissez Enregistrer au format PDF et le dossier.",
+  "Guardar como PDF o imprimir": "Enregistrer en PDF ou imprimer"
 }

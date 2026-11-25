@@ -552,7 +552,6 @@
   "Crear plan de red": "创建网络规划",
   "DOCUMENTOS": "文档",
   "Ficha de registro": "记录表",
-  "Elige cualquier registro y descarga su ficha en PDF.": "选择任意记录并下载其 PDF 表单。",
   "Seleccionar registro para PDF": "选择 PDF 记录",
   "Crear PDF": "创建 PDF",
   "Las credenciales de la bóveda no se incluyen.": "不包含保险库凭据。",
@@ -561,5 +560,19 @@
   "Proyecto de ejemplo": "示例项目",
   "Datos ficticios guardados solo en este navegador": "虚构数据仅保存在此浏览器中",
   "Bóveda no disponible en el ejemplo": "示例中无法使用保险库",
-  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "示例项目不包含或保存凭据。请返回真实数据以使用安全保险库。"
+  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "示例项目不包含或保存凭据。请返回真实数据以使用安全保险库。",
+  "Nombre del registro": "记录名称",
+  "Tipo de registro": "记录类型",
+  "Verificación": "验证状态",
+  "Control y seguimiento": "管理与跟踪",
+  "Campo": "字段",
+  "Información": "信息",
+  "DOCUMENTACIÓN DE RED": "网络文档",
+  "Elige cualquier registro para revisar su ficha en tabla antes de guardarla.": "选择任意记录，保存前先查看表格。",
+  "VISTA PREVIA DEL DOCUMENTO": "文档预览",
+  "Ficha en tabla": "表格记录",
+  "Revisa la información. El archivo solo se guarda cuando tú lo elijas.": "请检查信息。只有您选择保存时才会保存文件。",
+  "Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.": "从资产清单生成的技术表单。不含保险库凭据。",
+  "En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.": "在浏览器对话框中选择“另存为 PDF”和保存文件夹。",
+  "Guardar como PDF o imprimir": "另存为 PDF 或打印"
 }

@@ -552,7 +552,6 @@
   "Crear plan de red": "Netzplan erstellen",
   "DOCUMENTOS": "DOKUMENTE",
   "Ficha de registro": "Geräteblatt",
-  "Elige cualquier registro y descarga su ficha en PDF.": "Datensatz wählen und PDF-Blatt herunterladen.",
   "Seleccionar registro para PDF": "Datensatz für PDF auswählen",
   "Crear PDF": "PDF erstellen",
   "Las credenciales de la bóveda no se incluyen.": "Tresor-Zugangsdaten sind nicht enthalten.",
@@ -561,5 +560,19 @@
   "Proyecto de ejemplo": "Beispielprojekt",
   "Datos ficticios guardados solo en este navegador": "Fiktive Daten nur in diesem Browser gespeichert",
   "Bóveda no disponible en el ejemplo": "Tresor im Beispiel nicht verfügbar",
-  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "Das Beispielprojekt enthält oder speichert keine Zugangsdaten. Kehren Sie zu Ihren echten Daten zurück, um den sicheren Tresor zu nutzen."
+  "El proyecto de ejemplo no contiene ni guarda credenciales. Vuelve a tus datos reales para usar la bóveda segura.": "Das Beispielprojekt enthält oder speichert keine Zugangsdaten. Kehren Sie zu Ihren echten Daten zurück, um den sicheren Tresor zu nutzen.",
+  "Nombre del registro": "Datensatzname",
+  "Tipo de registro": "Datensatztyp",
+  "Verificación": "Überprüfung",
+  "Control y seguimiento": "Kontrolle und Nachverfolgung",
+  "Campo": "Feld",
+  "Información": "Information",
+  "DOCUMENTACIÓN DE RED": "NETZWERKDOKUMENTATION",
+  "Elige cualquier registro para revisar su ficha en tabla antes de guardarla.": "Datensatz wählen und die Tabelle vor dem Speichern prüfen.",
+  "VISTA PREVIA DEL DOCUMENTO": "DOKUMENTVORSCHAU",
+  "Ficha en tabla": "Tabellarisches Datenblatt",
+  "Revisa la información. El archivo solo se guarda cuando tú lo elijas.": "Prüfen Sie die Angaben. Die Datei wird nur auf Ihren Wunsch gespeichert.",
+  "Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.": "Technisches Datenblatt aus dem Inventar. Ohne Tresor-Zugangsdaten.",
+  "En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.": "Wählen Sie im Browserdialog „Als PDF speichern“ und den Zielordner.",
+  "Guardar como PDF o imprimir": "Als PDF speichern oder drucken"
 }

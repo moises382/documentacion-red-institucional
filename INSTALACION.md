@@ -31,7 +31,7 @@ npm run dev
 
 Abre **http://127.0.0.1:3000** en el navegador. Deja la terminal abierta mientras uses la aplicación. Para detenerla, presiona `Ctrl+C`.
 
-Para probar el proyecto sin capturar datos, pulsa **Cargar ejemplo** al pie del menú izquierdo. Crea una oficina ficticia en el navegador, con red `192.168.1.0/24` y máscara `255.255.255.0`. Puedes editar su nombre en **Plan de red**, descargar fichas PDF y volver a tus datos reales. El ejemplo se conserva únicamente en ese navegador.
+Para probar el proyecto sin capturar datos, pulsa **Cargar ejemplo** al pie del menú izquierdo. Crea una oficina ficticia en el navegador, con red `192.168.1.0/24` y máscara `255.255.255.0`. Puedes editar su nombre en **Plan de red**, abrir la vista previa en tabla de cualquier ficha con **Crear PDF** y volver a tus datos reales. Si quieres un archivo, pulsa **Guardar como PDF o imprimir** y elige **Guardar como PDF** y la carpeta en el diálogo del navegador. El ejemplo se conserva únicamente en ese navegador.
 
 `npm run seed:demo` sigue disponible como opción avanzada para insertar registros ficticios en la base SQLite local. No lo necesitas para usar el botón de ejemplo.
 
