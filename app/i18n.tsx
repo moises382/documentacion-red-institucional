@@ -263,6 +263,47 @@ const translations: Record<string, readonly [string, string]> = {
   'Datos documentados': ['Documented data', 'Dados documentados'],
   'Editar registro': ['Edit record', 'Editar registro'],
   Eliminar: ['Delete', 'Excluir'],
+  'Registro eliminado': ['Record deleted', 'Registro excluído'],
+  'Eliminar registro': ['Delete record', 'Excluir registro'],
+  'Desvincular teléfono': ['Disconnect phone', 'Desvincular telefone'],
+  Desvincular: ['Disconnect', 'Desvincular'],
+  'La ficha se eliminará. Si aparece en el diagrama, también desaparecerá de allí. Esta acción no se puede deshacer desde la aplicación.':
+    [
+      'The record will be deleted. If it appears in the diagram, it will disappear there too. This action cannot be undone in the app.',
+      'O registro será excluído. Se aparecer no diagrama, também desaparecerá de lá. Esta ação não pode ser desfeita no aplicativo.',
+    ],
+  'Se quitará la línea entre el teléfono y la central. El teléfono seguirá en el inventario.': [
+    'The line between the phone and PBX will be removed. The phone will remain in the inventory.',
+    'A linha entre o telefone e a central será removida. O telefone continuará no inventário.',
+  ],
+  'Otros registros vinculados no se eliminan automáticamente.': [
+    'Other linked records are not deleted automatically.',
+    'Outros registros vinculados não são excluídos automaticamente.',
+  ],
+  'Conexión telefónica retirada': ['Phone connection removed', 'Conexão telefônica removida'],
+  'elemento sin conexión documentada': [
+    'item without a documented connection',
+    'item sem conexão documentada',
+  ],
+  'elementos sin conexión documentada': [
+    'items without a documented connection',
+    'itens sem conexão documentada',
+  ],
+  'Las líneas solo aparecen cuando registras una conexión. Para unir un AP o una computadora, documenta el switch y el puerto con el equipo conectado.':
+    [
+      'Lines appear only when you record a connection. To link an AP or computer, document the switch and its port with the connected device.',
+      'As linhas aparecem apenas quando você registra uma conexão. Para ligar um AP ou computador, documente o switch e a porta com o equipamento conectado.',
+    ],
+  'Registrar puerto de switch': ['Record switch port', 'Registrar porta do switch'],
+  'Agregar switch': ['Add switch', 'Adicionar switch'],
+  'Administrar elementos del diagrama': ['Manage diagram items', 'Gerenciar itens do diagrama'],
+  'Puedes eliminar una ficha o una conexión registrada. La línea de telefonía se desvincula sin borrar el teléfono.':
+    [
+      'You can delete a record or a documented connection. The phone line can be disconnected without deleting the phone.',
+      'Você pode excluir um registro ou uma conexão documentada. A linha de telefonia pode ser desvinculada sem excluir o telefone.',
+    ],
+  'Equipos y elementos': ['Devices and items', 'Equipamentos e itens'],
+  'Conexiones documentadas': ['Documented connections', 'Conexões documentadas'],
   'Actualizar información': ['Update information', 'Atualizar informações'],
   'Registra datos técnicos y de ubicación. Guarda usuarios y contraseñas solo en la bóveda cifrada.':
     [
@@ -283,6 +324,45 @@ const translations: Record<string, readonly [string, string]> = {
   Campo: ['Field', 'Campo'],
   Información: ['Information', 'Informação'],
   'DOCUMENTACIÓN DE RED': ['NETWORK DOCUMENTATION', 'DOCUMENTAÇÃO DE REDE'],
+  'Documentos PDF': ['PDF documents', 'Documentos PDF'],
+  'Elige toda la documentación o una ficha para revisar sus tablas antes de guardarla.': [
+    'Choose all documentation or one record to review the tables before saving.',
+    'Escolha toda a documentação ou uma ficha para revisar as tabelas antes de salvar.',
+  ],
+  'Toda la documentación': ['All documentation', 'Toda a documentação'],
+  'Crear PDF completo': ['Create complete PDF', 'Criar PDF completo'],
+  'Documentación completa de red': [
+    'Complete network documentation',
+    'Documentação completa da rede',
+  ],
+  'Resumen general': ['Overall summary', 'Resumo geral'],
+  Indicador: ['Metric', 'Indicador'],
+  'Total o valor': ['Total or value', 'Total ou valor'],
+  Alcance: ['Scope', 'Escopo'],
+  'Registros documentados': ['Documented records', 'Registros documentados'],
+  'Registros de inventario': ['Inventory records', 'Registros de inventário'],
+  'Computadoras y laptops': ['Computers and laptops', 'Computadores e laptops'],
+  'Direcciones IP documentadas': ['Documented IP addresses', 'Endereços IP documentados'],
+  'Fichas de dirección IP': ['IP address records', 'Fichas de endereço IP'],
+  'Pendientes documentados': ['Documented pending items', 'Pendências documentadas'],
+  'Cambios en el historial': ['Changes in history', 'Alterações no histórico'],
+  'Subred seleccionada': ['Selected subnet', 'Sub-rede selecionada'],
+  'Subredes documentadas': ['Documented subnets', 'Sub-redes documentadas'],
+  'Subred actual': ['Current subnet', 'Sub-rede atual'],
+  'Estado del plan': ['Plan status', 'Estado do plano'],
+  'No hay una subred documentada para este alcance.': [
+    'There is no documented subnet for this scope.',
+    'Não há uma sub-rede documentada para este escopo.',
+  ],
+  'Índice de registros': ['Record index', 'Índice de registros'],
+  'Fichas completas': ['Complete records', 'Fichas completas'],
+  Acción: ['Action', 'Ação'],
+  Registro: ['Record', 'Registro'],
+  'Sin cambios registrados.': ['No changes recorded.', 'Nenhuma alteração registrada.'],
+  'Documento generado desde los registros del proyecto. Sin credenciales de la bóveda.': [
+    'Document generated from project records. Vault credentials are excluded.',
+    'Documento gerado a partir dos registros do projeto. Sem credenciais do cofre.',
+  ],
   'Rellenar borrador con registros de esta semana': [
     'Fill draft with this week’s records',
     'Preencher rascunho com os registros da semana',

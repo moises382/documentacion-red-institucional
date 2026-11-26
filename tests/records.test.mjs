@@ -145,6 +145,23 @@ test('documenta una central telefónica, su vínculo con teléfonos y rechaza cl
   assert.match(invalid.message, /campo no válido/);
 });
 
+test('permite desvincular un teléfono de la central sin borrar su ficha', () => {
+  const phone = validateRecord({
+    ...switchRecord,
+    name: 'TEL-DEMO-02',
+    payload: {
+      tipo: 'telefono_ip',
+      extension: '1002',
+      centralTelefonica: '',
+      estadoUso: 'Activo',
+    },
+  });
+  assert.equal(phone.message, undefined);
+  assert.equal(phone.value?.name, 'TEL-DEMO-02');
+  assert.equal(phone.value?.payload.centralTelefonica, '');
+  assert.equal(phone.value?.payload.estadoUso, 'Activo');
+});
+
 test('el historial describe los campos modificados', () => {
   const before = { ...switchRecord, id: 'demo', createdAt: '2026-01-01', updatedAt: '2026-01-01' };
   const after = {

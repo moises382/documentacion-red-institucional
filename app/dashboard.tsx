@@ -70,8 +70,9 @@ import {
   EXAMPLE_STORAGE_KEY,
   type ExampleProject,
 } from '@/lib/example-project';
-import { networkChoices, summarizeNetwork } from '@/lib/network-plan';
-import { recordSheetGroups } from '@/lib/record-sheet';
+import { documentationOverview } from '@/lib/documentation-report';
+import { networkChoices, summarizeNetwork, type NetworkChoice } from '@/lib/network-plan';
+import { recordSheetGroups, type SheetGroup } from '@/lib/record-sheet';
 import { validateRecord } from '@/lib/record-validation';
 import {
   EQUIPMENT_LABELS,
@@ -101,6 +102,8 @@ type View =
   | 'boveda';
 type SiteFilter = Site | 'Todas las sedes';
 type Modal = { mode: 'choose' } | { mode: 'form'; template: Template; record?: RecordItem } | null;
+type Removal = { action: 'delete' | 'disconnect_phone'; record: RecordItem } | null;
+const ALL_PDF_ID = '__all_documentation__';
 const iconMap: Record<string, LucideIcon> = {
   Network,
   Monitor,
@@ -324,6 +327,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const [verificationFilter, setVerificationFilter] = useState<Verification | 'todos'>('todos');
   const [usageFilter, setUsageFilter] = useState<EquipmentState | 'todos'>('todos');
   const [modal, setModal] = useState<Modal>(null);
+  const [removal, setRemoval] = useState<Removal>(null);
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [mobileMenu, setMobileMenu] = useState(false);
   const [commandOpen, setCommandOpen] = useState(false);
@@ -335,7 +339,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const [workTab, setWorkTab] = useState<'pendientes' | 'pruebas'>('pendientes');
   const [preferredVaultRecordId, setPreferredVaultRecordId] = useState('');
   const [networkId, setNetworkId] = useState('');
-  const [pdfRecordId, setPdfRecordId] = useState('');
+  const [pdfRecordId, setPdfRecordId] = useState(ALL_PDF_ID);
   const [pdfPreviewId, setPdfPreviewId] = useState<string | null>(null);
   const selected = records.find((r) => r.id === selectedId) ?? null;
   const pdfPreviewRecord = records.find((r) => r.id === pdfPreviewId) ?? null;
@@ -403,7 +407,8 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   const networks = useMemo(() => networkChoices(scoped), [scoped]);
   const currentNetwork = networks.find((item) => item.id === networkId) ?? networks[0];
   const networkSummary = currentNetwork ? summarizeNetwork(scoped, currentNetwork) : null;
-  const pdfRecord = scoped.find((item) => item.id === pdfRecordId) ?? scoped[0];
+  const pdfSelection = scoped.some((item) => item.id === pdfRecordId) ? pdfRecordId : ALL_PDF_ID;
+  const pdfRecord = scoped.find((item) => item.id === pdfSelection) ?? null;
   const visibleChanges = useMemo(
     () => changes.filter((c) => site === 'Todas las sedes' || c.site === site),
     [changes, site],
@@ -601,6 +606,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
   function toggleExample() {
     setSelectedId(null);
     setModal(null);
+    setRemoval(null);
     setView('resumen');
     setSite('Todas las sedes');
     setNetworkId('');
@@ -644,12 +650,36 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
     setMobileMenu(false);
     setSelectedId(null);
   }
-  async function remove(record: RecordItem) {
-    if (!window.confirm(`¿Eliminar «${record.name}»? El cambio quedará en el historial.`)) return;
-    await mutate(
-      { action: 'delete', id: record.id, baseUpdatedAt: record.updatedAt },
-      'Registro eliminado',
-    );
+  function requestRemoval(record: RecordItem, action: 'delete' | 'disconnect_phone' = 'delete') {
+    setError('');
+    setRemoval({ action, record });
+  }
+  async function confirmRemoval() {
+    if (!removal) return;
+    const { record, action } = removal;
+    const result =
+      action === 'delete'
+        ? await mutate(
+            { action: 'delete', id: record.id, baseUpdatedAt: record.updatedAt },
+            'Registro eliminado',
+          )
+        : await mutate(
+            {
+              action: 'update',
+              id: record.id,
+              baseUpdatedAt: record.updatedAt,
+              record: {
+                kind: record.kind,
+                name: record.name,
+                site: record.site,
+                location: record.location,
+                verification: record.verification,
+                payload: { ...record.payload, centralTelefonica: '' },
+              },
+            },
+            'Conexión telefónica retirada',
+          );
+    if (result) setRemoval(null);
   }
   function reportMarkdown(report: RecordItem) {
     const p = report.payload;
@@ -1434,6 +1464,15 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                                       >
                                         <Pencil size={16} />
                                       </button>
+                                      <button
+                                        type="button"
+                                        className="delete-inline"
+                                        onClick={() => requestRemoval(r)}
+                                        aria-label={`${t('Eliminar')}: ${r.name}`}
+                                      >
+                                        <Trash2 size={15} />
+                                        {t('Eliminar')}
+                                      </button>
                                     </div>
                                   </td>
                                 </tr>
@@ -1516,17 +1555,35 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                       zoom={zoom}
                       onSelect={setSelectedId}
                       onCreate={() => openNew(TEMPLATES.find((item) => item.id === 'switch')!)}
+                      onCreatePort={() => openNew(TEMPLATES.find((item) => item.id === 'puerto')!)}
+                      onDelete={(record) => requestRemoval(record)}
+                      onDisconnectPhone={(record) => requestRemoval(record, 'disconnect_phone')}
                     />
                   ))}
                   {crossSiteLinks.length > 0 && (
                     <div className="card cross-links">
                       <h3>{t('Enlaces entre sedes')}</h3>
                       {crossSiteLinks.map((r) => (
-                        <button key={r.id} onClick={() => setSelectedId(r.id)}>
-                          <GitBranch size={17} />
-                          <span>{summary(r, records)}</span>
-                          <Status value={r.verification} />
-                        </button>
+                        <div className="cross-link-row" key={r.id}>
+                          <button
+                            type="button"
+                            className="cross-link-open"
+                            onClick={() => setSelectedId(r.id)}
+                          >
+                            <GitBranch size={17} />
+                            <span>{summary(r, records)}</span>
+                            <Status value={r.verification} />
+                          </button>
+                          <button
+                            type="button"
+                            className="delete-inline"
+                            aria-label={`${t('Eliminar')}: ${r.name}`}
+                            onClick={() => requestRemoval(r)}
+                          >
+                            <Trash2 size={15} />
+                            {t('Eliminar')}
+                          </button>
+                        </div>
                       ))}
                     </div>
                   )}
@@ -1609,34 +1666,46 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                           {scoped
                             .filter((r) => r.kind === 'pendiente')
                             .map((r) => (
-                              <button
-                                className="issue-card card"
-                                key={r.id}
-                                onClick={() => setSelectedId(r.id)}
-                              >
-                                <div className="issue-top">
-                                  <span
-                                    className={`priority priority-${(r.payload.prioridad || 'Media').toLowerCase()}`}
+                              <article className="issue-card card" key={r.id}>
+                                <button
+                                  type="button"
+                                  className="issue-open"
+                                  onClick={() => setSelectedId(r.id)}
+                                >
+                                  <div className="issue-top">
+                                    <span
+                                      className={`priority priority-${(r.payload.prioridad || 'Media').toLowerCase()}`}
+                                    >
+                                      {t(r.payload.prioridad || 'Media')}
+                                    </span>
+                                    <Status value={r.verification} />
+                                  </div>
+                                  <h3>{r.name}</h3>
+                                  <p>{r.payload.detalle || t('Sin descripción')}</p>
+                                  <div className="issue-meta">
+                                    <span>
+                                      <MapPin size={14} />
+                                      {r.site}
+                                    </span>
+                                    <span>
+                                      <Clock3 size={14} />
+                                      {r.payload.fechaLimite
+                                        ? date(r.payload.fechaLimite, dateLocale)
+                                        : t('Sin fecha límite')}
+                                    </span>
+                                  </div>
+                                </button>
+                                <div className="record-card-actions">
+                                  <button
+                                    type="button"
+                                    className="delete-inline"
+                                    onClick={() => requestRemoval(r)}
                                   >
-                                    {t(r.payload.prioridad || 'Media')}
-                                  </span>
-                                  <Status value={r.verification} />
+                                    <Trash2 size={15} />
+                                    {t('Eliminar')}
+                                  </button>
                                 </div>
-                                <h3>{r.name}</h3>
-                                <p>{r.payload.detalle || t('Sin descripción')}</p>
-                                <div className="issue-meta">
-                                  <span>
-                                    <MapPin size={14} />
-                                    {r.site}
-                                  </span>
-                                  <span>
-                                    <Clock3 size={14} />
-                                    {r.payload.fechaLimite
-                                      ? date(r.payload.fechaLimite, dateLocale)
-                                      : t('Sin fecha límite')}
-                                  </span>
-                                </div>
-                              </button>
+                              </article>
                             ))}
                         </div>
                       )}
@@ -1662,28 +1731,39 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                       ) : (
                         <div className="test-list">
                           {tests.map((r) => (
-                            <button
-                              className="test-row card"
-                              key={r.id}
-                              onClick={() => setSelectedId(r.id)}
-                            >
-                              <span
-                                className={`test-icon ${r.payload.resultado === 'Aprobada' ? 'pass' : r.payload.resultado === 'Fallida' ? 'fail' : ''}`}
+                            <div className="test-row card" key={r.id}>
+                              <button
+                                type="button"
+                                className="test-row-main"
+                                onClick={() => setSelectedId(r.id)}
                               >
-                                <FlaskConical size={20} />
-                              </span>
-                              <span className="test-main">
-                                <strong>{r.name}</strong>
-                                <small>
-                                  {t(r.payload.tipo || 'Prueba')} · {r.site}
-                                </small>
-                              </span>
-                              <span className="test-result">
-                                {t(r.payload.resultado || 'Por confirmar')}
-                              </span>
-                              <time>{date(r.payload.fecha, dateLocale)}</time>
-                              <ArrowRight size={17} />
-                            </button>
+                                <span
+                                  className={`test-icon ${r.payload.resultado === 'Aprobada' ? 'pass' : r.payload.resultado === 'Fallida' ? 'fail' : ''}`}
+                                >
+                                  <FlaskConical size={20} />
+                                </span>
+                                <span className="test-main">
+                                  <strong>{r.name}</strong>
+                                  <small>
+                                    {t(r.payload.tipo || 'Prueba')} · {r.site}
+                                  </small>
+                                </span>
+                                <span className="test-result">
+                                  {t(r.payload.resultado || 'Por confirmar')}
+                                </span>
+                                <time>{date(r.payload.fecha, dateLocale)}</time>
+                                <ArrowRight size={17} />
+                              </button>
+                              <button
+                                type="button"
+                                className="delete-inline test-delete"
+                                onClick={() => requestRemoval(r)}
+                                aria-label={`${t('Eliminar')}: ${r.name}`}
+                              >
+                                <Trash2 size={15} />
+                                {t('Eliminar')}
+                              </button>
+                            </div>
                           ))}
                         </div>
                       )}
@@ -1776,6 +1856,14 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
                               <button onClick={() => downloadReport(r)}>
                                 <ArrowDownToLine size={15} />
                                 {t('Descargar')}
+                              </button>
+                              <button
+                                type="button"
+                                className="report-delete"
+                                onClick={() => requestRemoval(r)}
+                              >
+                                <Trash2 size={15} />
+                                {t('Eliminar')}
                               </button>
                             </div>
                           </article>
@@ -1993,22 +2081,29 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           )}
           <div className="network-pdf">
             <span className="network-kicker">{t('DOCUMENTOS')}</span>
-            <h3>{t('Ficha de registro')}</h3>
+            <h3>{t('Documentos PDF')}</h3>
             <p>
-              {t('Elige cualquier registro para revisar su ficha en tabla antes de guardarla.')}
+              {t(
+                'Elige toda la documentación o una ficha para revisar sus tablas antes de guardarla.',
+              )}
             </p>
             <select
               aria-label={t('Seleccionar registro para PDF')}
-              value={pdfRecord?.id || ''}
+              value={scoped.length ? pdfSelection : ''}
               onChange={(event) => setPdfRecordId(event.target.value)}
-              disabled={!pdfRecord}
+              disabled={!scoped.length}
             >
-              {pdfRecord ? (
-                scoped.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name} · {t(kindTitle(item))}
+              {scoped.length ? (
+                <>
+                  <option value={ALL_PDF_ID}>
+                    {t('Toda la documentación')} · {scoped.length} {t('registros')}
                   </option>
-                ))
+                  {scoped.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name} · {t(kindTitle(item))}
+                    </option>
+                  ))}
+                </>
               ) : (
                 <option value="">{t('Sin registros')}</option>
               )}
@@ -2016,11 +2111,15 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
             <button
               type="button"
               className="button button-primary"
-              disabled={!pdfRecord}
-              onClick={() => pdfRecord && openPdfPreview(pdfRecord)}
+              disabled={!scoped.length}
+              onClick={() =>
+                pdfSelection === ALL_PDF_ID
+                  ? setPdfPreviewId(ALL_PDF_ID)
+                  : pdfRecord && openPdfPreview(pdfRecord)
+              }
             >
               <FileText size={17} />
-              {t('Crear PDF')}
+              {t(pdfSelection === ALL_PDF_ID ? 'Crear PDF completo' : 'Crear PDF')}
             </button>
             <small>{t('Las credenciales de la bóveda no se incluyen.')}</small>
           </div>
@@ -2142,7 +2241,7 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
           all={records}
           onClose={() => setSelectedId(null)}
           onEdit={() => openEdit(selected)}
-          onDelete={() => void remove(selected)}
+          onDelete={() => requestRemoval(selected)}
           onPdf={() => openPdfPreview(selected)}
           canUseVault={!exampleProject}
           onVault={() => {
@@ -2217,6 +2316,75 @@ function DashboardContent({ displayName, hosted }: { displayName: string; hosted
             )
               setSelectedId(savedId);
           }}
+        />
+      )}
+      {removal && (
+        <div
+          className="modal-scrim removal-scrim"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !busy) setRemoval(null);
+          }}
+        >
+          <section
+            className="removal-modal modal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="removal-title"
+            aria-describedby="removal-description"
+          >
+            <span className="removal-icon">
+              <Trash2 size={23} />
+            </span>
+            <h2 id="removal-title">
+              {t(removal.action === 'delete' ? 'Eliminar registro' : 'Desvincular teléfono')}
+            </h2>
+            <strong className="removal-name">{removal.record.name}</strong>
+            <p id="removal-description">
+              {t(
+                removal.action === 'delete'
+                  ? 'La ficha se eliminará. Si aparece en el diagrama, también desaparecerá de allí. Esta acción no se puede deshacer desde la aplicación.'
+                  : 'Se quitará la línea entre el teléfono y la central. El teléfono seguirá en el inventario.',
+              )}
+            </p>
+            {removal.action === 'delete' && (
+              <p className="removal-note">
+                {t('Otros registros vinculados no se eliminan automáticamente.')}
+              </p>
+            )}
+            {error && (
+              <p className="removal-error" role="alert">
+                {t(error)}
+              </p>
+            )}
+            <div className="removal-actions">
+              <button
+                type="button"
+                className="button button-secondary"
+                disabled={busy}
+                onClick={() => setRemoval(null)}
+              >
+                {t('Cancelar')}
+              </button>
+              <button
+                type="button"
+                className="button button-danger"
+                disabled={busy}
+                onClick={() => void confirmRemoval()}
+              >
+                <Trash2 size={16} />
+                {t(removal.action === 'delete' ? 'Eliminar registro' : 'Desvincular')}
+              </button>
+            </div>
+          </section>
+        </div>
+      )}
+      {pdfPreviewId === ALL_PDF_ID && (
+        <FullDocumentationPreview
+          records={scoped}
+          changes={visibleChanges}
+          site={site}
+          currentNetwork={currentNetwork}
+          onClose={() => setPdfPreviewId(null)}
         />
       )}
       {pdfPreviewRecord && (
@@ -2310,12 +2478,18 @@ function TopologyDiagram({
   zoom,
   onSelect,
   onCreate,
+  onCreatePort,
+  onDelete,
+  onDisconnectPhone,
 }: {
   site: Site;
   records: RecordItem[];
   zoom: number;
   onSelect: (id: string) => void;
   onCreate: () => void;
+  onCreatePort: () => void;
+  onDelete: (record: RecordItem) => void;
+  onDisconnectPhone: (record: RecordItem) => void;
 }) {
   const { t } = useI18n();
   const equipment = records.filter((r) => r.site === site && r.kind === 'equipo');
@@ -2395,6 +2569,9 @@ function TopologyDiagram({
         name: `${r.name} · ${t('Central telefónica vinculada')}`,
       });
   }
+  const connectedIds = new Set(links.flatMap((link) => [link.from, link.to]));
+  const unconnected = nodes.filter((record) => !connectedIds.has(record.id));
+  const hasSwitch = equipment.some((record) => record.payload.tipo === 'switch');
   return (
     <div className="topology-card card">
       <div className="topology-card-head">
@@ -2407,6 +2584,34 @@ function TopologyDiagram({
         </div>
         <span className="topology-card-tag">{t('DIAGRAMA')}</span>
       </div>
+      {nodes.length > 0 && unconnected.length > 0 && (
+        <div className="topology-guidance">
+          <CircleHelp size={19} aria-hidden="true" />
+          <div>
+            <strong>
+              {unconnected.length}{' '}
+              {t(
+                unconnected.length === 1
+                  ? 'elemento sin conexión documentada'
+                  : 'elementos sin conexión documentada',
+              )}
+            </strong>
+            <p>
+              {t(
+                'Las líneas solo aparecen cuando registras una conexión. Para unir un AP o una computadora, documenta el switch y el puerto con el equipo conectado.',
+              )}
+            </p>
+          </div>
+          <button
+            type="button"
+            className="button button-secondary"
+            onClick={hasSwitch ? onCreatePort : onCreate}
+          >
+            <Plus size={15} />
+            {t(hasSwitch ? 'Registrar puerto de switch' : 'Agregar switch')}
+          </button>
+        </div>
+      )}
       {nodes.length === 0 ? (
         <div className="topology-empty">
           <div className="placeholder-diagram" aria-hidden="true">
@@ -2428,7 +2633,7 @@ function TopologyDiagram({
           <p>{t('Agrega equipos y sus conexiones para construir el diagrama automáticamente.')}</p>
           <button className="button button-secondary" onClick={onCreate}>
             <Plus size={16} />
-            Agregar switch
+            {t('Agregar switch')}
           </button>
         </div>
       ) : (
@@ -2589,6 +2794,86 @@ function TopologyDiagram({
           </div>
         </div>
       )}
+      {nodes.length > 0 && (
+        <details className="topology-manage">
+          <summary>
+            <Layers size={17} />
+            {t('Administrar elementos del diagrama')}
+            <ChevronDown size={16} className="topology-manage-chevron" />
+          </summary>
+          <div className="topology-manage-content">
+            <p>
+              {t(
+                'Puedes eliminar una ficha o una conexión registrada. La línea de telefonía se desvincula sin borrar el teléfono.',
+              )}
+            </p>
+            <strong>{t('Equipos y elementos')}</strong>
+            <div className="topology-manage-list">
+              {nodes.map((record) => (
+                <div className="topology-manage-row" key={record.id}>
+                  <button
+                    type="button"
+                    className="topology-manage-name"
+                    onClick={() => onSelect(record.id)}
+                  >
+                    {record.name}
+                  </button>
+                  <span>{t(kindTitle(record))}</span>
+                  <button type="button" className="delete-inline" onClick={() => onDelete(record)}>
+                    <Trash2 size={15} />
+                    {t('Eliminar')}
+                  </button>
+                </div>
+              ))}
+            </div>
+            {links.length > 0 && (
+              <>
+                <strong>{t('Conexiones documentadas')}</strong>
+                <div className="topology-manage-list">
+                  {links.map((link) => {
+                    const record = records.find(
+                      (item) => item.id === (link.type === 'telefonia' ? link.to : link.id),
+                    );
+                    if (!record) return null;
+                    return (
+                      <div className="topology-manage-row" key={link.id}>
+                        <button
+                          type="button"
+                          className="topology-manage-name"
+                          onClick={() => onSelect(record.id)}
+                        >
+                          {link.name}
+                        </button>
+                        <span>
+                          {t(
+                            link.type === 'telefonia'
+                              ? 'Telefonía IP'
+                              : link.type === 'puerto'
+                                ? 'Puerto de switch'
+                                : link.type === 'nodo'
+                                  ? 'Nodo'
+                                  : 'Enlace troncal',
+                          )}
+                        </span>
+                        <button
+                          type="button"
+                          className="delete-inline"
+                          onClick={() =>
+                            link.type === 'telefonia' ? onDisconnectPhone(record) : onDelete(record)
+                          }
+                        >
+                          <Trash2 size={15} />
+                          {t(link.type === 'telefonia' ? 'Desvincular' : 'Eliminar')}
+                        </button>
+                      </div>
+                    );
+                  })}
+                </div>
+              </>
+            )}
+          </div>
+        </details>
+      )}
       {(panels.length > 0 ||
         records.some(
           (r) =>
@@ -2624,6 +2909,288 @@ function TopologyDiagram({
           </div>
         </div>
       )}
+    </div>
+  );
+}
+
+function PdfSheetTable({ groups }: { groups: SheetGroup[] }) {
+  const { t } = useI18n();
+  return (
+    <table className="pdf-sheet-table">
+      <thead>
+        <tr>
+          <th scope="col">{t('Campo')}</th>
+          <th scope="col">{t('Información')}</th>
+        </tr>
+      </thead>
+      {groups.map((group) => (
+        <tbody key={group.title}>
+          <tr className="pdf-sheet-section">
+            <th scope="colgroup" colSpan={2}>
+              {group.title}
+            </th>
+          </tr>
+          {group.rows.map((row) => (
+            <tr key={row.label}>
+              <th scope="row">{row.label}</th>
+              <td>{row.value}</td>
+            </tr>
+          ))}
+        </tbody>
+      ))}
+    </table>
+  );
+}
+
+function FullDocumentationPreview({
+  records,
+  changes,
+  site,
+  currentNetwork,
+  onClose,
+}: {
+  records: RecordItem[];
+  changes: ChangeItem[];
+  site: SiteFilter;
+  currentNetwork?: NetworkChoice;
+  onClose: () => void;
+}) {
+  const { t, dateLocale } = useI18n();
+  const overview = documentationOverview(records);
+  const kindOrder: Kind[] = [...inventoryKinds, 'pendiente', 'prueba', 'reporte'];
+  const sortedRecords = [...records].sort(
+    (a, b) =>
+      SITES.indexOf(a.site) - SITES.indexOf(b.site) ||
+      kindOrder.indexOf(a.kind) - kindOrder.indexOf(b.kind) ||
+      a.name.localeCompare(b.name, dateLocale),
+  );
+  const sortedChanges = [...changes].sort((a, b) => b.occurredAt.localeCompare(a.occurredAt));
+  const scope = site === 'Todas las sedes' ? t('Todas las sedes') : site;
+  const totals = [
+    [t('Alcance'), scope],
+    [t('Registros documentados'), overview.totalRecords],
+    [t('Registros de inventario'), overview.inventoryRecords],
+    [t('Equipos inventariados'), overview.equipment],
+    [t('Computadoras y laptops'), overview.computers],
+    [t('Direcciones IP documentadas'), overview.ipAddresses],
+    [t('Fichas de dirección IP'), overview.ipRecords],
+    [t('Pendientes documentados'), overview.pending],
+    [t('Pruebas registradas'), overview.tests],
+    [t('Reportes semanales'), overview.reports],
+    [t('Cambios en el historial'), sortedChanges.length],
+  ] as const;
+
+  useEffect(() => {
+    const previousTitle = document.title;
+    document.title = `${t('Documentación completa de red')} · ${scope}`;
+    return () => {
+      document.title = previousTitle;
+    };
+  }, [scope, t]);
+
+  return (
+    <div
+      className="pdf-preview-scrim"
+      onMouseDown={(event) => {
+        if (event.target === event.currentTarget) onClose();
+      }}
+    >
+      <section
+        className="pdf-preview-modal pdf-full-modal"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="pdf-preview-title"
+      >
+        <div className="pdf-preview-toolbar">
+          <div>
+            <span className="section-kicker">{t('VISTA PREVIA DEL DOCUMENTO')}</span>
+            <h2 id="pdf-preview-title">{t('Documentación completa de red')}</h2>
+            <p>{t('Revisa la información. El archivo solo se guarda cuando tú lo elijas.')}</p>
+          </div>
+          <button className="icon-button" type="button" onClick={onClose} aria-label={t('Cerrar')}>
+            <X size={20} />
+          </button>
+        </div>
+        <div className="pdf-preview-scroll">
+          <div className="pdf-preview-document pdf-full-document">
+            <header className="pdf-sheet-header">
+              <span>{t('DOCUMENTACIÓN DE RED')}</span>
+              <h1>{t('Documentación completa de red')}</h1>
+              <p>
+                {scope} · {overview.totalRecords} {t('registros')}
+              </p>
+            </header>
+
+            <section className="pdf-report-section">
+              <h2>{t('Resumen general')}</h2>
+              <table className="pdf-sheet-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('Indicador')}</th>
+                    <th scope="col">{t('Total o valor')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {totals.map(([label, value]) => (
+                    <tr key={label}>
+                      <th scope="row">{label}</th>
+                      <td>{value}</td>
+                    </tr>
+                  ))}
+                  {currentNetwork && (
+                    <>
+                      <tr>
+                        <th scope="row">{t('Subred seleccionada')}</th>
+                        <td>
+                          {currentNetwork.site} · {currentNetwork.subnet.cidr}
+                        </td>
+                      </tr>
+                      <tr>
+                        <th scope="row">{t('Máscara de red')}</th>
+                        <td>{currentNetwork.subnet.mask}</td>
+                      </tr>
+                    </>
+                  )}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="pdf-report-section">
+              <h2>{t('Subredes documentadas')}</h2>
+              {overview.networks.length ? (
+                overview.networks.map(({ choice, summary }) => (
+                  <div className="pdf-network-section" key={choice.id}>
+                    <h3>
+                      {choice.site} · {choice.subnet.cidr}
+                    </h3>
+                    <table className="pdf-sheet-table">
+                      <thead>
+                        <tr>
+                          <th scope="col">{t('Campo')}</th>
+                          <th scope="col">{t('Información')}</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {[
+                          [t('Subred actual'), choice.subnet.cidr],
+                          [t('Máscara de red'), choice.subnet.mask],
+                          [t('Puerta de enlace'), choice.gateway || t('Por confirmar')],
+                          [t('Equipos en inventario'), summary.equipment],
+                          [t('IP fijas actuales'), summary.staticIps],
+                          [t('Computadoras DHCP'), summary.dhcpComputers],
+                          [
+                            t('Reserva de crecimiento'),
+                            `${summary.reserve} (${choice.reservePercent} %)`,
+                          ],
+                          [t('Direcciones necesarias'), summary.needed],
+                          [t('Capacidad utilizable'), summary.usable],
+                          [
+                            t('Estado del plan'),
+                            t(summary.valid ? 'Plan de red válido' : 'Revisar plan de red'),
+                          ],
+                        ].map(([label, value]) => (
+                          <tr key={label}>
+                            <th scope="row">{label}</th>
+                            <td>{value}</td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                ))
+              ) : (
+                <p>{t('No hay una subred documentada para este alcance.')}</p>
+              )}
+            </section>
+
+            <section className="pdf-report-section">
+              <h2>{t('Índice de registros')}</h2>
+              <table className="pdf-index-table">
+                <thead>
+                  <tr>
+                    <th scope="col">{t('Nombre del registro')}</th>
+                    <th scope="col">{t('Tipo de registro')}</th>
+                    <th scope="col">{t('Sede')}</th>
+                    <th scope="col">{t('Verificación')}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {sortedRecords.map((record) => (
+                    <tr key={record.id}>
+                      <th scope="row">{record.name}</th>
+                      <td>{t(kindTitle(record))}</td>
+                      <td>{record.site}</td>
+                      <td>{t(VERIFICATION_LABELS[record.verification])}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </section>
+
+            <section className="pdf-report-section">
+              <h2>{t('Fichas completas')}</h2>
+              {sortedRecords.map((record) => (
+                <article className="pdf-record-section" key={record.id}>
+                  <div className="pdf-record-heading">
+                    <span>
+                      {record.site} · {t(kindTitle(record))}
+                    </span>
+                    <h3>{record.name}</h3>
+                  </div>
+                  <PdfSheetTable groups={recordSheetGroups(record, records, t, dateLocale)} />
+                </article>
+              ))}
+            </section>
+
+            <section className="pdf-report-section">
+              <h2>{t('Historial de cambios')}</h2>
+              {sortedChanges.length ? (
+                <table className="pdf-index-table">
+                  <thead>
+                    <tr>
+                      <th scope="col">{t('Fecha')}</th>
+                      <th scope="col">{t('Acción')}</th>
+                      <th scope="col">{t('Registro')}</th>
+                      <th scope="col">{t('Descripción')}</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedChanges.map((change) => (
+                      <tr key={change.id}>
+                        <td>{date(change.occurredAt, dateLocale)}</td>
+                        <td>{t(change.action)}</td>
+                        <th scope="row">{change.name}</th>
+                        <td>{change.description}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              ) : (
+                <p>{t('Sin cambios registrados.')}</p>
+              )}
+            </section>
+            <p className="pdf-sheet-footer">
+              {t(
+                'Documento generado desde los registros del proyecto. Sin credenciales de la bóveda.',
+              )}
+            </p>
+          </div>
+        </div>
+        <div className="pdf-preview-actions">
+          <span>
+            {t('En el diálogo del navegador, elige Guardar como PDF y la carpeta de destino.')}
+          </span>
+          <div>
+            <button className="button button-secondary" type="button" onClick={onClose}>
+              {t('Cerrar')}
+            </button>
+            <button className="button button-primary" type="button" onClick={() => window.print()}>
+              <FileText size={17} />
+              {t('Guardar como PDF o imprimir')}
+            </button>
+          </div>
+        </div>
+      </section>
     </div>
   );
 }
@@ -2680,29 +3247,7 @@ function PdfPreview({
                 {record.site} · {t('Ficha de registro')}
               </p>
             </header>
-            <table className="pdf-sheet-table">
-              <thead>
-                <tr>
-                  <th scope="col">{t('Campo')}</th>
-                  <th scope="col">{t('Información')}</th>
-                </tr>
-              </thead>
-              {groups.map((group) => (
-                <tbody key={group.title}>
-                  <tr className="pdf-sheet-section">
-                    <th scope="colgroup" colSpan={2}>
-                      {group.title}
-                    </th>
-                  </tr>
-                  {group.rows.map((row) => (
-                    <tr key={row.label}>
-                      <th scope="row">{row.label}</th>
-                      <td>{row.value}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              ))}
-            </table>
+            <PdfSheetTable groups={groups} />
             <p className="pdf-sheet-footer">
               {t('Ficha técnica generada desde el inventario. Sin credenciales de la bóveda.')}
             </p>
@@ -2765,9 +3310,15 @@ function DetailPanel({
       >
         <div className="drawer-head">
           <span>{t('DETALLE DEL REGISTRO')}</span>
-          <button className="icon-button" onClick={onClose} aria-label={t('Cerrar')}>
-            <X size={20} />
-          </button>
+          <div className="drawer-head-actions">
+            <button type="button" className="drawer-head-delete" onClick={onDelete}>
+              <Trash2 size={15} />
+              {t('Eliminar')}
+            </button>
+            <button className="icon-button" onClick={onClose} aria-label={t('Cerrar')}>
+              <X size={20} />
+            </button>
+          </div>
         </div>
         <div className="drawer-content">
           <span className="drawer-icon">{createElement(getIcon(record), { size: 27 })}</span>

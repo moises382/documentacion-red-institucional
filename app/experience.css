@@ -960,6 +960,76 @@ html[data-theme='dark'] .command-result.active {
   color: #66818a;
   font-size: 10px;
 }
+.pdf-full-modal {
+  width: min(1000px, 100%);
+}
+.pdf-full-document {
+  max-width: 900px;
+}
+.pdf-report-section {
+  margin-top: 30px;
+}
+.pdf-report-section h2 {
+  margin: 0 0 12px;
+  color: #174957;
+  font-size: 17px;
+}
+.pdf-report-section > p {
+  color: #587681;
+  font-size: 11px;
+}
+.pdf-network-section,
+.pdf-record-section {
+  margin: 0 0 25px;
+}
+.pdf-network-section h3,
+.pdf-record-heading h3 {
+  margin: 0 0 10px;
+  color: #173b46;
+  font-size: 14px;
+}
+.pdf-record-heading {
+  margin-bottom: 10px;
+  padding-top: 15px;
+  border-top: 2px solid #dbeae6;
+}
+.pdf-record-heading span {
+  color: #187d79;
+  font-size: 10px;
+  font-weight: 750;
+}
+.pdf-record-heading h3 {
+  margin: 4px 0 0;
+}
+.pdf-index-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 10px;
+  line-height: 1.45;
+}
+.pdf-index-table thead th {
+  padding: 9px;
+  background: #153e49;
+  color: #fff;
+  text-align: left;
+}
+.pdf-index-table tbody th,
+.pdf-index-table tbody td {
+  padding: 8px 9px;
+  border: 1px solid #dbe7e4;
+  color: #173b46;
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.pdf-index-table tbody tr:nth-child(even) {
+  background: #f8fbfa;
+}
+.pdf-index-table tbody th {
+  font-weight: 700;
+}
 .pdf-preview-actions {
   border-top: 1px solid #dfeae8;
 }
@@ -1043,9 +1113,23 @@ html[data-theme='dark'] .command-result.active {
   .pdf-sheet-table thead {
     display: table-header-group;
   }
+  .pdf-index-table thead {
+    display: table-header-group;
+  }
   .pdf-sheet-table tr {
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+  .pdf-index-table tr,
+  .pdf-record-heading,
+  .pdf-network-section h3 {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  .pdf-report-section h2,
+  .pdf-record-heading {
+    break-after: avoid;
+    page-break-after: avoid;
   }
   .pdf-sheet-table .pdf-sheet-section {
     break-after: avoid;
@@ -1460,5 +1544,340 @@ html[data-theme='dark'] .example-banner {
   }
   .network-pdf {
     margin-top: 22px;
+  }
+}
+
+.delete-inline {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  min-height: 30px;
+  padding: 0 9px;
+  border: 1px solid #efd7d2;
+  border-radius: 7px;
+  background: #fff7f5;
+  color: #a34237;
+  font-size: 11px;
+  font-weight: 750;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.delete-inline:hover {
+  border-color: #e5b4aa;
+  background: #ffebe7;
+}
+.drawer-head-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.drawer-head-delete {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 9px;
+  border: 1px solid #efd7d2;
+  border-radius: 7px;
+  background: #fff7f5;
+  color: #a34237;
+  font-size: 11px;
+  font-weight: 750;
+  letter-spacing: 0;
+  cursor: pointer;
+}
+.drawer-head-delete:hover {
+  background: #ffebe7;
+}
+.cross-link-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-top: 1px solid #edf2f2;
+}
+.cross-links .cross-link-row .cross-link-open {
+  flex: 1;
+  min-width: 0;
+  border-top: 0;
+}
+.cross-links .cross-link-row .delete-inline {
+  flex: none;
+  width: auto;
+  padding: 0 9px;
+  border: 1px solid #efd7d2;
+  background: #fff7f5;
+  color: #a34237;
+}
+.cross-links .cross-link-row .delete-inline:hover {
+  border-color: #e5b4aa;
+  background: #ffebe7;
+}
+.delete-inline:focus-visible,
+.issue-open:focus-visible,
+.test-row-main:focus-visible,
+.topology-manage button:focus-visible,
+.topology-manage summary:focus-visible {
+  outline: 3px solid #53bead;
+  outline-offset: 2px;
+}
+.issue-card {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+}
+.issue-open {
+  flex: 1;
+  width: 100%;
+  padding: 18px 18px 8px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.record-card-actions {
+  display: flex;
+  justify-content: flex-end;
+  padding: 0 18px 14px;
+}
+.test-row {
+  gap: 0;
+  padding: 0;
+}
+.test-row-main {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  flex: 1;
+  min-width: 0;
+  padding: 13px 15px;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+.test-delete {
+  margin-right: 13px;
+}
+.report-actions {
+  flex-wrap: wrap;
+  gap: 9px 14px;
+}
+.report-actions .report-delete {
+  color: #a34237;
+}
+.topology-guidance {
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 13px 20px;
+  border-bottom: 1px solid #d9e9e5;
+  background: #f1faf7;
+  color: #246b68;
+}
+.topology-guidance > svg {
+  flex: none;
+}
+.topology-guidance > div {
+  flex: 1;
+}
+.topology-guidance strong {
+  font-size: 12px;
+}
+.topology-guidance p {
+  margin: 4px 0 0;
+  color: #52757a;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.topology-guidance .button {
+  flex: none;
+}
+.topology-manage {
+  border-top: 1px solid #e3edeb;
+  background: #fff;
+}
+.topology-manage summary {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  padding: 15px 20px;
+  color: #246371;
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  list-style: none;
+}
+.topology-manage summary::-webkit-details-marker {
+  display: none;
+}
+.topology-manage-chevron {
+  margin-left: auto;
+  transition: transform 0.2s;
+}
+.topology-manage[open] .topology-manage-chevron {
+  transform: rotate(180deg);
+}
+.topology-manage-content {
+  padding: 0 20px 18px;
+}
+.topology-manage-content > p {
+  margin: 0 0 13px;
+  color: #637e86;
+  font-size: 11px;
+  line-height: 1.5;
+}
+.topology-manage-content > strong {
+  display: block;
+  margin: 14px 0 7px;
+  color: #365765;
+  font-size: 11px;
+}
+.topology-manage-list {
+  max-height: 260px;
+  overflow: auto;
+  border: 1px solid #e2eae9;
+  border-radius: 9px;
+}
+.topology-manage-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  border-bottom: 1px solid #edf2f1;
+}
+.topology-manage-row:last-child {
+  border-bottom: 0;
+}
+.topology-manage-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  border: 0;
+  background: none;
+  color: #275a6a;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  cursor: pointer;
+}
+.topology-manage-name:hover {
+  text-decoration: underline;
+}
+.topology-manage-row > span {
+  color: #718b93;
+  font-size: 10px;
+}
+.removal-scrim {
+  z-index: 90;
+}
+.removal-modal {
+  width: min(440px, 100%);
+  padding: 27px;
+  color: #274551;
+}
+.removal-icon {
+  display: grid;
+  place-items: center;
+  width: 45px;
+  height: 45px;
+  border-radius: 12px;
+  background: #fff0ed;
+  color: #b4493b;
+}
+.removal-modal h2 {
+  margin: 16px 0 9px;
+  color: #243f4b;
+  font-size: 20px;
+}
+.removal-name {
+  font-size: 14px;
+  overflow-wrap: anywhere;
+}
+.removal-modal p {
+  margin: 10px 0 0;
+  color: #607983;
+  font-size: 12px;
+  line-height: 1.55;
+}
+.removal-modal .removal-note {
+  color: #a25c4d;
+}
+.removal-modal .removal-error {
+  color: #ad3427;
+}
+.removal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 9px;
+  margin-top: 22px;
+}
+html[data-theme='dark'] .delete-inline,
+html[data-theme='dark'] .drawer-head-delete,
+html[data-theme='dark'] .cross-links .cross-link-row .delete-inline {
+  border-color: #664343;
+  background: #382c32;
+  color: #ffc2b4;
+}
+html[data-theme='dark'] .topology-manage {
+  border-color: #35515b;
+  background: #1b3039;
+}
+html[data-theme='dark'] .topology-guidance {
+  border-color: #315b55;
+  background: #1c3d3c;
+  color: #ace5d7;
+}
+html[data-theme='dark'] .topology-guidance p,
+html[data-theme='dark'] .topology-manage-content > p,
+html[data-theme='dark'] .topology-manage-row > span {
+  color: #adc5c8;
+}
+html[data-theme='dark'] .topology-manage summary,
+html[data-theme='dark'] .topology-manage-name,
+html[data-theme='dark'] .topology-manage-content > strong {
+  color: #c4e7e7;
+}
+html[data-theme='dark'] .topology-manage-list,
+html[data-theme='dark'] .topology-manage-row {
+  border-color: #35515b;
+}
+html[data-theme='dark'] .removal-modal {
+  background: #1b3039;
+  color: #e3f0f0;
+}
+html[data-theme='dark'] .removal-modal h2 {
+  color: #f0f8f7;
+}
+html[data-theme='dark'] .removal-modal p {
+  color: #b4cbd0;
+}
+@media (max-width: 640px) {
+  .topology-guidance {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .topology-guidance .button {
+    margin-left: 30px;
+  }
+  .topology-manage-row {
+    flex-wrap: wrap;
+  }
+  .topology-manage-row > span {
+    display: none;
+  }
+  .test-row-main {
+    gap: 8px;
+  }
+  .test-row-main time,
+  .test-row-main > svg {
+    display: none;
+  }
+  .test-delete {
+    margin-right: 7px;
+  }
+  .delete-inline {
+    padding: 0 7px;
   }
 }

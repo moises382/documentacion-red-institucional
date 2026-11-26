@@ -42,7 +42,7 @@ Cada cable puede documentarse con un código visible, etiqueta en ambos extremos
 
 ![Visor de topología con equipos y conexiones de demostración](docs/capturas/04-topologia.jpg)
 
-El visor organiza los equipos por sede y dibuja las conexiones registradas entre ellos. Es una representación de la documentación guardada: **no realiza un escaneo automático de la red**. Debajo de cada diagrama también aparecen las referencias físicas de cableado.
+El visor organiza los equipos por sede y dibuja las conexiones registradas entre ellos. Es una representación de la documentación guardada: **no realiza un escaneo automático de la red**. Un Access Point o una computadora se une al dibujo cuando registras el switch y un puerto con ese equipo como destino. El aviso del diagrama identifica elementos sin conexión documentada y ofrece el siguiente paso. En **Administrar elementos del diagrama** puedes eliminar fichas y conexiones; el vínculo entre una central y un teléfono se puede desvincular sin borrar el teléfono. Debajo de cada diagrama también aparecen las referencias físicas de cableado.
 
 ### Teléfono IP y componentes
 
@@ -87,13 +87,14 @@ Consulta la [galería completa con explicación de las quince pantallas](docs/CA
 - Pendientes, inconsistencias automáticas por IP, puerto o etiqueta de cable duplicados, y registro de pruebas.
 - Estados **verificado**, **pendiente** y **por confirmar**.
 - Historial de altas, cambios y eliminaciones.
+- Botones **Eliminar** junto a cada registro del inventario, pendiente, prueba y reporte, y al abrir su ficha; piden confirmación antes de borrar. También hay controles de eliminación en la topología para equipos, conexiones de cada sede y enlaces entre sedes. Los registros vinculados no se borran automáticamente.
 - Reportes semanales con borrador basado en los registros de la semana y descarga en Markdown.
 - Filtros por Colima, Tecomán, Manzanillo y Coquimatlán.
 - Búsqueda rápida de secciones y fichas con atajo de teclado; indicadores y filtros de sede que abren directamente los registros correspondientes.
 - Diseño adaptable con temas claro, oscuro y automático; selector de español, inglés, portugués, alemán, chino simplificado y francés. Las preferencias se guardan en el navegador.
 - Bóveda de credenciales cifrada en el navegador y respaldo cifrado descargable, separada de los registros técnicos.
 - Resumen lateral de red que se actualiza al guardar cambios: subred IPv4, máscara, equipos, IP fijas, computadoras DHCP, puerta de enlace, reserva de crecimiento y direcciones necesarias. Se puede documentar más de una red mediante la plantilla **Plan de red**.
-- Botón **PDF** en cada fila del inventario y en los reportes, además de **Crear PDF** en la barra derecha y en todas las fichas. Abre una vista previa organizada por tablas; solo el botón **Guardar como PDF o imprimir** abre el diálogo del navegador, donde eliges guardar el archivo y su destino. La ficha incluye datos técnicos y excluye las credenciales de la bóveda.
+- Botón **PDF** en cada fila del inventario y en los reportes, además de un selector en la barra derecha para crear **una ficha o toda la documentación**. El PDF completo incluye totales del alcance, subredes y máscaras, equipos, direcciones IP, computadoras, fichas técnicas de todos los registros, pendientes, pruebas, reportes e historial. La vista previa usa tablas; solo **Guardar como PDF o imprimir** abre el diálogo del navegador, donde eliges guardar el archivo y su destino. Las credenciales de la bóveda quedan excluidas.
 - Botón **Cargar ejemplo** abajo a la izquierda. Abre una oficina ficticia con 43 equipos y un plan `192.168.1.0/24`, tal como en la captura de referencia. El ejemplo se guarda solo en ese navegador; puedes editarlo y volver a tus datos reales sin mezclarlos. Cambia el nombre de la oficina editando el registro **Plan de red**.
 
 ## Tecnologías
